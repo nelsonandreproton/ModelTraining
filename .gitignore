@@ -1,0 +1,20 @@
+# Secrets
+.env
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Model artifacts (large binary files)
+my_dataset/
+my_dataset_processed/
+my_dataset_tokenized/
+my_lora_model/
+my_pretrained_model/
+lora_output/
+model_output/
+
+# HuggingFace cache
+*.cache/

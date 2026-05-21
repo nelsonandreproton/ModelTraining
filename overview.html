@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ModelTraining — Visão Geral</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #222636;
+      --border: #2e3347;
+      --accent: #6c8aff;
+      --accent2: #a78bfa;
+      --green: #34d399;
+      --yellow: #fbbf24;
+      --red: #f87171;
+      --orange: #fb923c;
+      --cyan: #22d3ee;
+      --text: #e2e8f0;
+      --muted: #8892a4;
+      --radius: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      line-height: 1.6;
+    }
+    a { color: var(--accent); text-decoration: none; }
+
+    .page { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; }
+
+    header {
+      text-align: center;
+      padding: 48px 0 36px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 48px;
+    }
+    header h1 { font-size: 2.4rem; font-weight: 700; letter-spacing: -0.5px; }
+    header h1 span { color: var(--accent); }
+    header p { color: var(--muted); margin-top: 10px; font-size: 1.05rem; }
+    .badge {
+      display: inline-block;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 3px 14px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin: 8px 4px 0;
+    }
+    .badge.green  { border-color: var(--green);  color: var(--green); }
+    .badge.blue   { border-color: var(--accent);  color: var(--accent); }
+    .badge.purple { border-color: var(--accent2); color: var(--accent2); }
+    .badge.yellow { border-color: var(--yellow);  color: var(--yellow); }
+
+    h2 {
+      font-size: 1.35rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    h2::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    h3 { font-size: 1rem; font-weight: 600; margin-bottom: 8px; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+    }
+    .card + .card { margin-top: 16px; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    @media (max-width: 720px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+    /* Pipeline */
+    .flow { display: flex; align-items: center; gap: 0; flex-wrap: wrap; margin-bottom: 8px; }
+    .flow-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 0.83rem;
+      text-align: center;
+      min-width: 110px;
+    }
+    .flow-box small { display: block; color: var(--muted); font-size: 0.72rem; margin-top: 2px; }
+    .flow-box.accent { border-color: var(--accent);  color: var(--accent); }
+    .flow-box.green  { border-color: var(--green);   color: var(--green); }
+    .flow-box.yellow { border-color: var(--yellow);  color: var(--yellow); }
+    .flow-box.purple { border-color: var(--accent2); color: var(--accent2); }
+    .flow-box.orange { border-color: var(--orange);  color: var(--orange); }
+    .flow-box.cyan   { border-color: var(--cyan);    color: var(--cyan); }
+    .flow-arrow { color: var(--muted); font-size: 1.2rem; padding: 0 8px; }
+
+    .fork-container { display: grid; grid-template-columns: 1fr 40px 1fr; gap: 0; align-items: start; }
+    .fork-line { display: flex; flex-direction: column; align-items: center; padding-top: 20px; gap: 6px; color: var(--muted); font-size: 1.2rem; }
+
+    /* File table */
+    .file-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    .file-table th { text-align: left; color: var(--muted); font-weight: 500; border-bottom: 1px solid var(--border); padding: 8px 12px 8px 0; }
+    .file-table td { padding: 9px 12px 9px 0; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .file-table tr:last-child td { border-bottom: none; }
+    .file-table code { font-family: monospace; color: var(--accent); background: var(--surface2); border-radius: 4px; padding: 1px 6px; font-size: 0.82rem; }
+
+    .pill { display: inline-block; border-radius: 20px; padding: 1px 10px; font-size: 0.75rem; font-weight: 600; border: 1px solid; }
+    .pill.dataset { color: var(--cyan);   border-color: var(--cyan); }
+    .pill.train   { color: var(--green);  border-color: var(--green); }
+    .pill.infer   { color: var(--yellow); border-color: var(--yellow); }
+    .pill.eval    { color: var(--orange); border-color: var(--orange); }
+    .pill.test    { color: var(--accent2);border-color: var(--accent2); }
+
+    /* API */
+    .endpoint { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 14px 18px; margin-bottom: 10px; }
+    .method { display: inline-block; font-size: 0.75rem; font-weight: 700; border-radius: 4px; padding: 2px 8px; margin-right: 8px; }
+    .method.get  { background: #1a4731; color: var(--green); }
+    .method.post { background: #1a2e4a; color: var(--accent); }
+    .endpoint-path { font-family: monospace; font-size: 0.9rem; }
+    .endpoint-desc { color: var(--muted); font-size: 0.85rem; margin-top: 6px; }
+    pre.code {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 18px;
+      font-size: 0.82rem;
+      overflow-x: auto;
+      color: #a5f3fc;
+      line-height: 1.5;
+      margin-top: 8px;
+    }
+    pre.code .key { color: var(--accent2); }
+    pre.code .val { color: var(--green); }
+    pre.code .str { color: #fcd34d; }
+    pre.code .num { color: var(--orange); }
+
+    .param-grid { display: grid; grid-template-columns: auto 1fr; gap: 6px 18px; font-size: 0.88rem; }
+    .param-grid .label { color: var(--muted); white-space: nowrap; }
+    .param-grid .val   { color: var(--text); font-family: monospace; }
+
+    /* Setting explanation rows */
+    .setting-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 12px; }
+    .setting-table th { text-align: left; color: var(--muted); font-weight: 500; border-bottom: 1px solid var(--border); padding: 6px 12px 6px 0; }
+    .setting-table td { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .setting-table tr:last-child td { border-bottom: none; }
+    .setting-table code { font-family: monospace; color: var(--accent); background: var(--surface2); border-radius: 4px; padding: 1px 6px; font-size: 0.8rem; }
+    .setting-table .meaning { color: var(--muted); }
+
+    /* Results banner */
+    .result-banner {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .result-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+    }
+    .result-card.winner { border-color: var(--green); }
+    .result-card .rank { font-size: 1.4rem; margin-bottom: 4px; }
+    .result-card .model-name { font-weight: 600; font-size: 0.9rem; margin-bottom: 8px; }
+    .result-card .perp { font-size: 1.6rem; font-weight: 700; font-family: monospace; }
+    .result-card .perp.good { color: var(--green); }
+    .result-card .perp.mid  { color: var(--yellow); }
+    .result-card .perp.bad  { color: var(--red); }
+    .result-card .perp-label { font-size: 0.75rem; color: var(--muted); }
+
+    /* Improvements */
+    .improvement-item {
+      display: flex;
+      gap: 16px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .improvement-item:last-child { border-bottom: none; }
+    .imp-priority {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      margin-top: 2px;
+    }
+    .imp-priority.high   { background: #2d1a1a; color: var(--red);    border: 1px solid var(--red); }
+    .imp-priority.medium { background: #2d2510; color: var(--yellow); border: 1px solid var(--yellow); }
+    .imp-priority.low    { background: #1a2d1a; color: var(--green);  border: 1px solid var(--green); }
+    .imp-body h4 { font-size: 0.95rem; font-weight: 600; margin-bottom: 4px; }
+    .imp-body p  { font-size: 0.85rem; color: var(--muted); }
+    .imp-body .imp-tag {
+      display: inline-block;
+      font-size: 0.72rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 7px;
+      color: var(--muted);
+      margin-top: 6px;
+      margin-right: 4px;
+    }
+
+    .step-file {
+      font-family: monospace;
+      font-size: 0.8rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 7px;
+      display: inline-block;
+      margin-bottom: 6px;
+      color: var(--accent);
+    }
+    .step-desc { color: var(--muted); font-size: 0.88rem; }
+
+    .tag { display: inline-block; background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; padding: 2px 9px; font-size: 0.78rem; color: var(--muted); margin: 3px 2px; }
+    .highlight { color: var(--text); }
+
+    section { margin-bottom: 52px; }
+
+    .callout {
+      background: var(--surface2);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      padding: 12px 16px;
+      font-size: 0.87rem;
+      color: var(--muted);
+      margin-top: 12px;
+    }
+    .callout strong { color: var(--text); }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <header>
+    <h1><span>Model</span>Training</h1>
+    <p>Pipeline completo de fine-tuning e inferência de LLMs em português</p>
+    <div>
+      <span class="badge blue">Qwen2.5-1.5B</span>
+      <span class="badge purple">LoRA / PEFT</span>
+      <span class="badge green">FastAPI</span>
+      <span class="badge yellow">500 exemplos PT</span>
+      <span class="badge">Python 3.11+</span>
+      <span class="badge">HuggingFace</span>
+    </div>
+  </header>
+
+  <!-- 1. VISÃO GERAL -->
+  <section>
+    <h2>1. O que este projeto faz</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Objetivo</h3>
+        <p style="color:var(--muted); font-size:0.9rem; margin-bottom:12px;">
+          Demonstrar o pipeline completo de treino de um modelo de linguagem (LLM)
+          em dados próprios em português — desde a criação do dataset até à exposição
+          via API REST. O foco principal é o fine-tuning eficiente com LoRA, que
+          permite adaptar um modelo poderoso com poucos dados e sem GPU.
+        </p>
+        <div>
+          <span class="tag">Fine-tuning LoRA</span>
+          <span class="tag">Pré-treino do zero</span>
+          <span class="tag">Avaliação de modelos</span>
+          <span class="tag">Inferência via API</span>
+          <span class="tag">Dataset em português</span>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Stack principal</h3>
+        <div class="param-grid">
+          <span class="label">Modelo base</span>       <span class="val">Qwen2.5-1.5B-Instruct (1.54B params)</span>
+          <span class="label">Fine-tuning</span>        <span class="val">LoRA via PEFT + TRL SFTTrainer</span>
+          <span class="label">Framework ML</span>       <span class="val">PyTorch + Transformers</span>
+          <span class="label">Datasets</span>           <span class="val">HuggingFace datasets (Arrow)</span>
+          <span class="label">API</span>                <span class="val">FastAPI + Uvicorn</span>
+          <span class="label">Dataset</span>            <span class="val">500 pares Q&amp;A em português</span>
+          <span class="label">Hardware</span>           <span class="val">CPU (use_cpu=True)</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. PIPELINE -->
+  <section>
+    <h2>2. Pipeline completo</h2>
+    <div class="card">
+      <div style="overflow-x:auto;">
+        <div style="min-width:600px;">
+
+          <div style="margin-bottom:6px;">
+            <div class="flow">
+              <div class="flow-box cyan">
+                <strong>create_dataset.py</strong>
+                <small>500 pares Q&amp;A PT</small>
+              </div>
+              <div class="flow-arrow">→</div>
+              <div class="flow-box">
+                <strong>my_dataset/</strong>
+                <small>Arrow format</small>
+              </div>
+              <div class="flow-arrow">→</div>
+              <div class="flow-box cyan">
+                <strong>explore_dataset.py</strong>
+                <small>template + 80/20 split</small>
+              </div>
+              <div class="flow-arrow">→</div>
+              <div class="flow-box">
+                <strong>my_dataset_processed/</strong>
+                <small>400 train / 100 test</small>
+              </div>
+              <div class="flow-arrow">→</div>
+              <div class="flow-box cyan">
+                <strong>tokenize_dataset.py</strong>
+                <small>BPE, max 512 tokens</small>
+              </div>
+              <div class="flow-arrow">→</div>
+              <div class="flow-box">
+                <strong>my_dataset_tokenized/</strong>
+                <small>IDs + attention masks</small>
+              </div>
+            </div>
+          </div>
+
+          <div style="text-align:center; color:var(--muted); margin: 4px 0 2px; font-size:0.85rem;">
+            ↙ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ↘
+          </div>
+          <div class="fork-container" style="margin-bottom:6px;">
+
+            <div>
+              <div class="flow-box green" style="margin-bottom:8px; text-align:center;">
+                <strong>finetune_lora.py</strong>
+                <small>LoRA fine-tuning (20 epochs)</small>
+              </div>
+              <div class="flow" style="justify-content:center;">
+                <div class="flow-arrow" style="transform:rotate(90deg);">→</div>
+              </div>
+              <div class="flow-box" style="margin-bottom:8px; text-align:center;">
+                <strong>lora_output/</strong>
+                <small>checkpoints por época</small>
+              </div>
+              <div class="flow" style="justify-content:center;">
+                <div class="flow-arrow" style="transform:rotate(90deg);">→</div>
+              </div>
+              <div class="flow-box green" style="text-align:center;">
+                <strong>my_lora_model/</strong>
+                <small>adaptadores ~5 MB</small>
+              </div>
+            </div>
+
+            <div class="fork-line">⬤</div>
+
+            <div>
+              <div class="flow-box accent" style="margin-bottom:8px; text-align:center;">
+                <strong>pretrain.py</strong>
+                <small>pré-treino do zero</small>
+              </div>
+              <div class="flow" style="justify-content:center;">
+                <div class="flow-arrow" style="transform:rotate(90deg);">→</div>
+              </div>
+              <div class="flow-box" style="margin-bottom:8px; text-align:center;">
+                <strong>model_output/</strong>
+                <small>checkpoints por época</small>
+              </div>
+              <div class="flow" style="justify-content:center;">
+                <div class="flow-arrow" style="transform:rotate(90deg);">→</div>
+              </div>
+              <div class="flow-box accent" style="text-align:center;">
+                <strong>my_pretrained_model/</strong>
+                <small>modelo tiny GPT-2</small>
+              </div>
+            </div>
+          </div>
+
+          <div style="text-align:center; color:var(--muted); margin: 4px 0 2px; font-size:0.85rem;">
+            ↘ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ↙
+          </div>
+          <div class="flow" style="justify-content:center; margin-bottom:8px;">
+            <div class="flow-box orange" style="min-width:160px; text-align:center;">
+              <strong>evaluate_models.py</strong>
+              <small>perplexidade nos 3 modelos</small>
+            </div>
+          </div>
+
+          <div style="text-align:center; color:var(--muted); margin: 4px 0 2px; font-size:0.85rem;">
+            ↙ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ↘
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 40px 1fr; gap:0; max-width:480px; margin:0 auto;">
+            <div class="flow-box yellow" style="text-align:center;">
+              <strong>inference_pipeline.py</strong>
+              <small>inferência direta (stdout)</small>
+            </div>
+            <div></div>
+            <div class="flow-box purple" style="text-align:center;">
+              <strong>api.py</strong>
+              <small>FastAPI – POST /perguntar</small>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. FASE DE DADOS -->
+  <section>
+    <h2>3. Fase de dados</h2>
+
+    <!-- create_dataset -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="step-file">create_dataset.py</div>
+      <h3>Criação do dataset</h3>
+      <p class="step-desc" style="margin-bottom:12px;">
+        Define manualmente 500 pares <code>instruction → response</code> em português,
+        cobrindo 20+ categorias temáticas (geografia, história, ciência, matemática, tecnologia,
+        filosofia, saúde, cultura portuguesa, IA/ML, etc.).
+        Guarda em formato Arrow, o formato nativo da biblioteca <code>datasets</code> da HuggingFace
+        — eficiente para datasets tabulares e compatível com todos os trainers.
+      </p>
+      <div style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:12px; font-size:0.83rem; margin-bottom:10px;">
+        <span style="color:var(--muted);">Estrutura de cada exemplo:</span><br/>
+        <span style="color:var(--accent2);">instruction:</span> <span style="color:var(--yellow);">"Qual é a capital de Portugal?"</span><br/>
+        <span style="color:var(--accent2);">response:</span> <span style="color:var(--yellow);">"A capital de Portugal é Lisboa."</span>
+      </div>
+      <div class="callout">
+        <strong>Porquê 500 exemplos?</strong> Abaixo de ~50 exemplos o LoRA apenas memoriza os dados sem generalizar.
+        500 exemplos diversificados permitem ao modelo aprender padrões de resposta em português em vez de decorar exemplos específicos.
+      </div>
+    </div>
+
+    <!-- explore_dataset -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="step-file">explore_dataset.py</div>
+      <h3>Processamento e formatação</h3>
+      <p class="step-desc" style="margin-bottom:12px;">
+        Carrega o dataset raw, aplica um <strong>template de chat</strong> que transforma os pares
+        instruction/response numa única string formatada, e divide em conjuntos de treino e teste.
+        Este formato é o que o modelo irá ver durante o treino.
+      </p>
+      <div style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:12px; font-size:0.83rem; margin-bottom:12px;">
+        <span style="color:var(--muted);">Template aplicado (Qwen ChatML):</span><br/>
+        <span style="color:var(--cyan);">&lt;|im_start|&gt;user</span><br/>
+        Qual é a capital de Portugal?<span style="color:var(--cyan);">&lt;|im_end|&gt;</span><br/>
+        <span style="color:var(--green);">&lt;|im_start|&gt;assistant</span><br/>
+        A capital de Portugal é Lisboa.<span style="color:var(--green);">&lt;|im_end|&gt;</span>
+      </div>
+      <table class="setting-table">
+        <thead><tr><th>Parâmetro</th><th>Valor</th><th class="meaning">Significado</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>split</code></td>
+            <td>80% / 20%</td>
+            <td class="meaning">400 exemplos para treino, 100 para avaliação. O teste permite medir se o modelo generaliza ou apenas memoriza os dados de treino.</td>
+          </tr>
+          <tr>
+            <td><code>template</code></td>
+            <td>Qwen ChatML (&lt;|im_start|&gt; / &lt;|im_end|&gt;)</td>
+            <td class="meaning">Formato nativo do Qwen2.5-Instruct que ensina o modelo a distinguir perguntas de respostas. Usar o formato correto para o modelo base é essencial — template errado = resultados degradados.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- tokenize_dataset -->
+    <div class="card">
+      <div class="step-file">tokenize_dataset.py</div>
+      <h3>Tokenização</h3>
+      <p class="step-desc" style="margin-bottom:12px;">
+        Converte o texto em sequências numéricas (IDs de tokens) que o modelo consegue processar.
+        O Qwen2.5 usa <strong>Byte-Pair Encoding (BPE)</strong>: começa com caracteres individuais
+        e funde os pares mais frequentes, criando um vocabulário de 151 936 tokens
+        (muito maior que o GPT-2 com 50 257 — melhor cobertura de português e caracteres especiais).
+      </p>
+      <table class="setting-table">
+        <thead><tr><th>Parâmetro</th><th>Valor</th><th class="meaning">Significado</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>max_length</code></td>
+            <td>512 tokens</td>
+            <td class="meaning">Tamanho máximo de cada exemplo. Antes era 128, o que truncava muitas respostas a meio. 512 permite respostas completas sem cortes, ao custo de mais memória RAM durante o treino.</td>
+          </tr>
+          <tr>
+            <td><code>truncation=True</code></td>
+            <td>ativo</td>
+            <td class="meaning">Se um exemplo ultrapassar 512 tokens, é cortado. Necessário para manter tamanhos uniformes no batch.</td>
+          </tr>
+          <tr>
+            <td><code>padding="max_length"</code></td>
+            <td>ativo</td>
+            <td class="meaning">Exemplos mais curtos que 512 tokens são preenchidos com o token especial EOS até atingir 512. Garante que todos os exemplos num batch têm o mesmo tamanho, requisito do PyTorch.</td>
+          </tr>
+          <tr>
+            <td><code>pad_token = eos_token</code></td>
+            <td>151645</td>
+            <td class="meaning">O Qwen2.5 usa o token &lt;|endoftext|&gt; (ID 151645) como EOS. Reutilizamo-lo como padding. A <code>attention_mask</code> garante que estes tokens de padding são ignorados durante o treino.</td>
+          </tr>
+          <tr>
+            <td><code>padding_side</code></td>
+            <td>"right"</td>
+            <td class="meaning">Qwen2.5 requer padding à direita (ao contrário de alguns modelos que fazem padding à esquerda). Padding errado degrada a qualidade do treino em modelos causais.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 4. FASE DE TREINO -->
+  <section>
+    <h2>4. Fase de treino</h2>
+    <div class="grid-2">
+
+      <!-- LoRA -->
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <div class="step-file">finetune_lora.py</div>
+          <span class="pill train">Caminho principal</span>
+        </div>
+        <h3>Fine-tuning com LoRA</h3>
+        <p class="step-desc" style="margin-bottom:14px;">
+          Parte do GPT-2 já treinado pela OpenAI em centenas de gigabytes de texto.
+          O LoRA <strong>não altera</strong> os 124M parâmetros originais — adiciona apenas
+          pequenas matrizes (adaptadores) nas camadas de atenção. O gradiente flui
+          só pelos adaptadores, tornando o treino muito mais rápido e leve.
+        </p>
+
+        <div style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:14px; margin-bottom:14px; font-size:0.82rem;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+            <div style="background:#1a1d27; border:1px solid var(--border); border-radius:6px; padding:6px 12px; flex:1; text-align:center; color:var(--muted);">
+              Qwen2.5-1.5B Base<br/><span style="font-size:0.75rem;">1.54B params — congelado</span>
+            </div>
+            <div style="color:var(--muted);">+</div>
+            <div style="background:#1a1d27; border:1px solid var(--green); border-radius:6px; padding:6px 12px; flex:1; text-align:center; color:var(--green);">
+              LoRA Adapters<br/><span style="font-size:0.75rem;">2.18M params — treináveis</span>
+            </div>
+          </div>
+          <div style="text-align:center; color:var(--muted); font-size:0.75rem;">
+            W' = W + ΔW &nbsp;|&nbsp; ΔW = B × A &nbsp;|&nbsp; apenas 0.14% dos parâmetros actualizados (2.18M / 1.54B)
+          </div>
+        </div>
+
+        <table class="setting-table">
+          <thead><tr><th>Parâmetro</th><th>Valor</th><th class="meaning">Significado</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>r (rank)</code></td>
+              <td>8</td>
+              <td class="meaning">Dimensão interna das matrizes LoRA (A e B). Rank maior = mais capacidade de aprendizagem, mais parâmetros. 8 é um bom equilíbrio para datasets pequenos.</td>
+            </tr>
+            <tr>
+              <td><code>lora_alpha</code></td>
+              <td>16</td>
+              <td class="meaning">Factor de escala do LoRA. Na prática, o LoRA aplica ΔW × (alpha/r). Com alpha=16 e r=8, a escala é 2 — amplifica a contribuição dos adaptadores.</td>
+            </tr>
+            <tr>
+              <td><code>lora_dropout</code></td>
+              <td>0.05</td>
+              <td class="meaning">Regularização: 5% dos neurónios dos adaptadores são desligados aleatoriamente durante o treino. Reduz overfitting em datasets pequenos.</td>
+            </tr>
+            <tr>
+              <td><code>target_modules</code></td>
+              <td>q_proj, k_proj, v_proj, o_proj</td>
+              <td class="meaning">Camadas de atenção do Qwen2.5 onde os adaptadores são inseridos: projeção de queries, keys, values e output. Nomes diferentes do GPT-2 (c_attn/c_proj) mas mesma função — capturar padrões de relação entre tokens.</td>
+            </tr>
+            <tr>
+              <td><code>num_train_epochs</code></td>
+              <td>20</td>
+              <td class="meaning">Número de vezes que o modelo vê todo o dataset de treino. Mais épocas = mais aprendizagem, mas risco de overfitting. Aumentado de 10 para 20 com o dataset maior.</td>
+            </tr>
+            <tr>
+              <td><code>learning_rate</code></td>
+              <td>2e-4</td>
+              <td class="meaning">Tamanho do passo de atualização dos pesos. 0.0002 é um valor típico para LoRA — maior que fine-tuning completo (onde 1e-5 é comum) porque só os adaptadores aprendem.</td>
+            </tr>
+            <tr>
+              <td><code>per_device_train_batch_size</code></td>
+              <td>2</td>
+              <td class="meaning">Exemplos processados em paralelo por cada passo. Valor baixo imposto pela RAM disponível (CPU). Batch maior estabilizaria o treino mas requer mais memória.</td>
+            </tr>
+            <tr>
+              <td><code>max_length</code></td>
+              <td>512</td>
+              <td class="meaning">Comprimento máximo das sequências no SFTTrainer. Deve corresponder ao valor usado na tokenização para não haver truncações adicionais.</td>
+            </tr>
+            <tr>
+              <td><code>eval_strategy</code></td>
+              <td>epoch</td>
+              <td class="meaning">Avalia no conjunto de teste no final de cada época. Permite monitorizar overfitting em tempo real e o <code>load_best_model_at_end=True</code> guarda o melhor checkpoint.</td>
+            </tr>
+            <tr>
+              <td><code>use_cpu</code></td>
+              <td>True</td>
+              <td class="meaning">Força o treino em CPU. Necessário neste ambiente (sem GPU). Lento, mas funcional para datasets pequenos.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pre-train -->
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <div class="step-file">pretrain.py</div>
+          <span class="pill train" style="color:var(--accent); border-color:var(--accent);">Caminho experimental</span>
+        </div>
+        <h3>Pré-treino do zero</h3>
+        <p class="step-desc" style="margin-bottom:14px;">
+          Constrói uma versão minúscula do GPT-2 com arquitetura personalizada e treina
+          todos os pesos desde o início. Ao contrário do LoRA, este modelo não parte de
+          nenhum conhecimento prévio — aprende tudo do dataset de 500 exemplos.
+        </p>
+
+        <div style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:14px; margin-bottom:14px; font-size:0.82rem;">
+          <div style="color:var(--muted); font-size:0.75rem; margin-bottom:8px;">Arquitetura tiny GPT-2</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+            <div style="background:#1a1d27; border:1px solid var(--border); border-radius:6px; padding:5px 10px; text-align:center;">
+              Embedding<br/><span style="color:var(--muted); font-size:0.72rem;">d_model = 128</span>
+            </div>
+            <div style="background:#1a1d27; border:1px solid var(--border); border-radius:6px; padding:5px 10px; text-align:center;">
+              Transformer Layers<br/><span style="color:var(--accent); font-size:0.72rem;">4 camadas × 4 heads</span>
+            </div>
+            <div style="background:#1a1d27; border:1px solid var(--border); border-radius:6px; padding:5px 10px; text-align:center;">
+              Context window<br/><span style="color:var(--muted); font-size:0.72rem;">128 tokens</span>
+            </div>
+            <div style="background:#1a1d27; border:1px solid var(--border); border-radius:6px; padding:5px 10px; text-align:center;">
+              Total params<br/><span style="color:var(--yellow); font-size:0.72rem;">~2–3M</span>
+            </div>
+          </div>
+        </div>
+
+        <table class="setting-table">
+          <thead><tr><th>Parâmetro</th><th>Valor</th><th class="meaning">Significado</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>n_embd</code></td>
+              <td>128</td>
+              <td class="meaning">Dimensão do espaço de embeddings. O GPT-2 real usa 768. 128 reduz drasticamente os parâmetros, tornando o treino viável em CPU.</td>
+            </tr>
+            <tr>
+              <td><code>n_layer</code></td>
+              <td>4</td>
+              <td class="meaning">Número de blocos Transformer empilhados. GPT-2 usa 12. 4 camadas são o mínimo para aprender alguma estrutura de linguagem.</td>
+            </tr>
+            <tr>
+              <td><code>n_head</code></td>
+              <td>4</td>
+              <td class="meaning">Número de cabeças de atenção paralelas. Cada cabeça aprende padrões de relação diferentes entre tokens.</td>
+            </tr>
+            <tr>
+              <td><code>learning_rate</code></td>
+              <td>5e-4</td>
+              <td class="meaning">Maior que no LoRA porque os pesos começam aleatórios — precisam de dar passos maiores no início.</td>
+            </tr>
+            <tr>
+              <td><code>DataCollatorForCausalLM</code></td>
+              <td>—</td>
+              <td class="meaning">Prepara os labels para o treino causal: o modelo aprende a prever o próximo token. Cada token é o label do token anterior.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="callout" style="border-color: var(--red);">
+          <strong>Resultado esperado:</strong> Perplexidade muito alta. 500 exemplos são insuficientes para treinar do zero — um modelo precisa de centenas de GB de texto para aprender a língua. Este caminho existe para fins didáticos, para comparar com o LoRA.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. AVALIAÇÃO -->
+  <section>
+    <h2>5. Resultados da avaliação</h2>
+    <div class="card">
+      <div class="step-file">evaluate_models.py</div>
+      <p class="step-desc" style="margin-bottom:20px;">
+        Compara os três modelos calculando a <strong>perplexidade</strong> em exemplos de Q&amp;A em português.
+        A perplexidade mede quão "surpreso" o modelo fica com o texto: é calculada como
+        <code>exp(loss)</code> onde o loss é a média do cross-entropy em cada token.
+        Perplexidade 10 significa que o modelo hesita em média entre 10 palavras possíveis a cada passo.
+        <strong>Quanto menor, melhor.</strong>
+      </p>
+
+      <div class="result-banner" style="grid-template-columns: 1fr 1fr;">
+        <div class="result-card winner">
+          <div class="rank">🥇</div>
+          <div class="model-name">Qwen2.5-1.5B + LoRA</div>
+          <div class="perp good">1.86</div>
+          <div class="perp-label">perplexidade</div>
+          <div style="font-size:0.78rem; color:var(--muted); margin-top:8px;">500 exemplos PT, 512 tokens<br/>20 épocas — resultado final</div>
+        </div>
+        <div class="result-card">
+          <div class="rank">🥈</div>
+          <div class="model-name">Qwen2.5-1.5B Base</div>
+          <div class="perp mid">22.72</div>
+          <div class="perp-label">perplexidade</div>
+          <div style="font-size:0.78rem; color:var(--muted); margin-top:8px;">Sem fine-tuning<br/>benchmark de referência</div>
+        </div>
+      </div>
+
+      <div style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:14px; font-size:0.85rem;">
+        <div style="margin-bottom:8px; color:var(--text); font-weight:600;">Interpretação dos resultados</div>
+        <div style="color:var(--muted);">
+          O LoRA atingiu <span style="color:var(--green); font-weight:600;">1.86</span> vs
+          <span style="color:var(--yellow); font-weight:600;">22.72</span> do Qwen2.5-1.5B base —
+          uma melhoria de <strong style="color:var(--text);">12×</strong>. A perplexidade de 1.86
+          é excecional — significa que o modelo prevê cada token com ~86% de certeza,
+          praticamente a memorizar o formato Q&amp;A. Para comparação, o GPT-2 + LoRA anterior
+          atingiu 6.44 no mesmo dataset.<br/><br/>
+          O Qwen2.5-1.5B parte já de uma base muito mais forte (1.54B params vs 124M do GPT-2,
+          treinado em dados multilingues incluindo português), o que explica o salto de qualidade
+          mesmo com os mesmos 500 exemplos.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. CONCEITOS CHAVE -->
+  <section>
+    <h2>6. Conceitos chave</h2>
+    <div class="grid-2">
+
+      <div class="card">
+        <h3>LoRA — Low-Rank Adaptation</h3>
+        <p class="step-desc" style="margin-bottom:12px;">
+          Em vez de actualizar todos os 124M pesos do GPT-2, o LoRA adiciona
+          duas matrizes pequenas (A e B) em cada camada de atenção.
+          O produto B×A representa a <em>adaptação</em> aprendida.
+          O modelo base fica intacto e pode ser reutilizado com diferentes adaptadores.
+        </p>
+        <div style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:12px; font-family:monospace; font-size:0.82rem; color:var(--muted);">
+          W_orig (124M) — congelado, nunca muda<br/>
+          A ∈ ℝ^(d×r) e B ∈ ℝ^(r×d) — treináveis<br/>
+          W_out = W_orig + (B × A) × (alpha / r)
+        </div>
+        <div class="callout">
+          <strong>Vantagem prática:</strong> O ficheiro guardado (<code>my_lora_model/</code>) tem
+          apenas ~tens de MB porque só guarda A e B. O Qwen2.5-1.5B base (3 GB) é carregado separadamente e
+          os adaptadores são adicionados em memória. No HuggingFace Hub, só o adaptador é publicado.
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>SFT — Supervised Fine-Tuning</h3>
+        <p class="step-desc" style="margin-bottom:12px;">
+          O modelo aprende a imitar os pares instrução→resposta do dataset.
+          A loss é calculada apenas nos tokens do <code>&lt;|assistant|&gt;</code>
+          (a resposta) — não na pergunta. Isso ensina o modelo a responder,
+          não a repetir a pergunta.
+        </p>
+        <div style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:12px; font-size:0.82rem;">
+          <div style="margin-bottom:6px;"><span style="color:var(--cyan);">Input:</span> <span style="color:var(--muted);">&lt;|im_start|&gt;user\nQual a capital?&lt;|im_end|&gt;\n&lt;|im_start|&gt;assistant\n</span></div>
+          <div style="margin-bottom:6px;"><span style="color:var(--green);">Target:</span> <span style="color:var(--muted);">A capital é Lisboa.&lt;|im_end|&gt;</span></div>
+          <div><span style="color:var(--yellow);">Loss:</span> <span style="color:var(--muted);">cross-entropy token a token na resposta</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Perplexidade</h3>
+        <p class="step-desc" style="margin-bottom:10px;">
+          Métrica padrão para modelos de linguagem. Calcula quão bem o modelo
+          prevê cada token do texto de teste. Derivada directamente da loss de treino.
+        </p>
+        <div style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:12px; font-family:monospace; font-size:0.85rem; text-align:center; color:var(--accent);">
+          Perplexidade = exp( H ) &nbsp; onde H = — (1/N) Σ log P(tᵢ)
+        </div>
+        <div class="callout">
+          <strong>Regra prática:</strong> Perplexidade 1 = perfeito (improvável). Perplexidade 10 = bom para texto específico. Perplexidade 100+ = modelo não adaptado ao domínio.
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Parâmetros de geração (inferência)</h3>
+        <p class="step-desc" style="margin-bottom:10px;">
+          Controlam como o modelo escolhe cada token durante a geração:
+        </p>
+        <table class="setting-table">
+          <thead><tr><th>Parâmetro</th><th>Valor</th><th class="meaning">Efeito</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>temperature</code></td>
+              <td>0.7</td>
+              <td class="meaning">Suaviza a distribuição de probabilidade. 1.0 = distribuição original. &lt;1 = mais determinista. &gt;1 = mais aleatório/criativo.</td>
+            </tr>
+            <tr>
+              <td><code>repetition_penalty</code></td>
+              <td>1.3</td>
+              <td class="meaning">Penaliza tokens já gerados, reduzindo a probabilidade de os repetir. Evita loops como "Lisboa Lisboa Lisboa…"</td>
+            </tr>
+            <tr>
+              <td><code>no_repeat_ngram_size</code></td>
+              <td>4</td>
+              <td class="meaning">Proíbe que qualquer sequência de 4 tokens consecutivos se repita no output. Complementa a repetition_penalty.</td>
+            </tr>
+            <tr>
+              <td><code>max_new_tokens</code></td>
+              <td>50</td>
+              <td class="meaning">Número máximo de tokens gerados. Limita o comprimento da resposta.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 7. INFERÊNCIA -->
+  <section>
+    <h2>7. Inferência</h2>
+    <div class="grid-2">
+
+      <div class="card">
+        <div class="step-file">inference_pipeline.py</div>
+        <h3>Inferência direta</h3>
+        <p class="step-desc" style="margin-bottom:12px;">
+          Carrega o modelo LoRA e gera respostas na linha de comandos, sem servidor.
+          Usa a API <code>pipeline</code> da HuggingFace que abstrai o pré e pós-processamento.
+        </p>
+        <div class="param-grid">
+          <span class="label">Modelo</span>            <span class="val">my_lora_model/</span>
+          <span class="label">Max new tokens</span>    <span class="val">50</span>
+          <span class="label">Temperature</span>       <span class="val">0.7</span>
+          <span class="label">Rep. penalty</span>      <span class="val">1.3</span>
+          <span class="label">no_repeat_ngram</span>   <span class="val">4</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="step-file">api.py</div>
+        <h3>API REST (FastAPI)</h3>
+        <p class="step-desc" style="margin-bottom:12px;">
+          Servidor HTTP que expõe o modelo como serviço. O modelo é carregado
+          uma vez no arranque e mantido em memória para servir múltiplos pedidos.
+          CORS activado para aceitar pedidos de qualquer origem.
+        </p>
+        <div class="endpoint">
+          <span class="method get">GET</span>
+          <span class="endpoint-path">/</span> &nbsp;
+          <span class="method get">GET</span>
+          <span class="endpoint-path">/health</span>
+          <div class="endpoint-desc">Estado e saúde do servidor</div>
+        </div>
+        <div class="endpoint">
+          <span class="method post">POST</span>
+          <span class="endpoint-path">/perguntar</span>
+          <div class="endpoint-desc">Gera uma resposta para a pergunta fornecida</div>
+          <pre class="code"><span class="key">// Request</span>
+{
+  <span class="key">"pergunta"</span>: <span class="str">"Qual a capital de Portugal?"</span>,
+  <span class="key">"max_tokens"</span>: <span class="num">50</span>,
+  <span class="key">"temperature"</span>: <span class="num">0.7</span>
+}
+
+<span class="key">// Response</span>
+{
+  <span class="key">"pergunta"</span>: <span class="str">"Qual a capital de Portugal?"</span>,
+  <span class="key">"resposta"</span>: <span class="str">"A capital de Portugal é Lisboa."</span>
+}</pre>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 8. FICHEIROS -->
+  <section>
+    <h2>8. Ficheiros e diretórios</h2>
+    <div class="card">
+      <table class="file-table">
+        <thead>
+          <tr>
+            <th>Ficheiro / Pasta</th>
+            <th>Fase</th>
+            <th>Descrição</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>create_dataset.py</code></td><td><span class="pill dataset">dataset</span></td><td>500 pares Q&amp;A em português, 20+ categorias</td></tr>
+          <tr><td><code>explore_dataset.py</code></td><td><span class="pill dataset">dataset</span></td><td>Template de chat + split 80/20 (400 train / 100 test)</td></tr>
+          <tr><td><code>tokenize_dataset.py</code></td><td><span class="pill dataset">dataset</span></td><td>Tokeniza com GPT-2 BPE (max 512 tokens, padding EOS)</td></tr>
+          <tr><td><code>finetune_lora.py</code></td><td><span class="pill train">treino</span></td><td>LoRA fine-tuning — rank 8, 20 épocas, lr 2e-4</td></tr>
+          <tr><td><code>pretrain.py</code></td><td><span class="pill train">treino</span></td><td>Pré-treino tiny GPT-2 do zero (4 layers, d=128, ~3M params)</td></tr>
+          <tr><td><code>evaluate_models.py</code></td><td><span class="pill eval">avaliação</span></td><td>Perplexidade nos 2 modelos — Qwen2.5 + LoRA: 1.86, Base: 22.72</td></tr>
+          <tr><td><code>inference_pipeline.py</code></td><td><span class="pill infer">inferência</span></td><td>Geração de texto via pipeline HuggingFace</td></tr>
+          <tr><td><code>api.py</code></td><td><span class="pill infer">inferência</span></td><td>FastAPI, porta 8000, endpoint POST /perguntar</td></tr>
+          <tr><td><code>chat.html</code></td><td><span class="pill infer">inferência</span></td><td>Chat web — abre no browser com api.py a correr</td></tr>
+          <tr><td><code>upload_to_hub.py</code></td><td><span class="pill test">publicação</span></td><td>Publica adaptador LoRA e dataset no HuggingFace Hub</td></tr>
+          <tr><td><code>hub/model_card.md</code></td><td><span class="pill test">publicação</span></td><td>Model card para o repo do adaptador no Hub</td></tr>
+          <tr><td><code>hub/dataset_card.md</code></td><td><span class="pill test">publicação</span></td><td>Dataset card para o repo do dataset no Hub</td></tr>
+          <tr><td><code>test_lora.py</code></td><td><span class="pill test">teste</span></td><td>Geração directa com modelo LoRA (sem pipeline)</td></tr>
+          <tr><td><code>test_pretrained.py</code></td><td><span class="pill test">teste</span></td><td>Geração directa com modelo pré-treinado</td></tr>
+          <tr><td><code>tokenizer_explore.py</code></td><td><span class="pill test">exploração</span></td><td>Explora tokenização de texto em português</td></tr>
+          <tr><td><code>test_setup.py</code></td><td><span class="pill test">teste</span></td><td>Verifica versões de PyTorch e Transformers</td></tr>
+          <tr><td><code>my_dataset/</code></td><td><span class="pill dataset">dataset</span></td><td>Dataset raw em Arrow (500 exemplos)</td></tr>
+          <tr><td><code>my_dataset_processed/</code></td><td><span class="pill dataset">dataset</span></td><td>Com template aplicado e split 80/20</td></tr>
+          <tr><td><code>my_dataset_tokenized/</code></td><td><span class="pill dataset">dataset</span></td><td>Tokenizado (IDs + attention masks, max 512)</td></tr>
+          <tr><td><code>lora_output/</code></td><td><span class="pill train">treino</span></td><td>Checkpoints LoRA por época (best model selecionado)</td></tr>
+          <tr><td><code>my_lora_model/</code></td><td><span class="pill train">treino</span></td><td>Adaptadores LoRA finais (~5 MB) + tokenizer</td></tr>
+          <tr><td><code>model_output/</code></td><td><span class="pill train">treino</span></td><td>Checkpoints do pré-treino do zero</td></tr>
+          <tr><td><code>my_pretrained_model/</code></td><td><span class="pill train">treino</span></td><td>Modelo tiny GPT-2 completo</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 9. HUGGINGFACE HUB -->
+  <section>
+    <h2>9. Publicar no HuggingFace Hub</h2>
+    <div class="grid-2">
+
+      <div class="card">
+        <h3>O que publicar</h3>
+        <p class="step-desc" style="margin-bottom:14px;">
+          Dois repositórios independentes: o adaptador LoRA (leve) e o dataset.
+          O modelo base (3 GB) fica no repo do Qwen — não é necessário publicá-lo.
+        </p>
+        <table class="setting-table">
+          <thead><tr><th>Repo</th><th>Conteúdo</th><th class="meaning">Tamanho</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>username/qwen25-1.5b-pt-qa-lora</code></td>
+              <td>adapter_config.json + adapter_model.safetensors + tokenizer</td>
+              <td class="meaning">~tens de MB</td>
+            </tr>
+            <tr>
+              <td><code>username/portuguese-qa-instruct-500</code></td>
+              <td>500 pares Q&amp;A PT-PT (train/test splits)</td>
+              <td class="meaning">~KB</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="callout">
+          <strong>Como carregar depois:</strong>
+          <pre class="code" style="margin-top:8px; font-size:0.78rem; color:var(--text);">from peft import AutoPeftModelForCausalLM
+model = AutoPeftModelForCausalLM.from_pretrained(
+    <span class="str">"username/qwen25-1.5b-pt-qa-lora"</span>
+)
+<span class="key"># Qwen2.5-1.5B base é descarregado automaticamente</span></pre>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Como publicar</h3>
+        <p class="step-desc" style="margin-bottom:14px;">
+          Script <code>upload_to_hub.py</code> trata de tudo. Requer token de acesso do HuggingFace.
+        </p>
+        <div style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:12px; font-size:0.82rem; margin-bottom:12px;">
+          <div style="color:var(--muted); margin-bottom:8px;">1. Adicionar ao <code>.env</code>:</div>
+          <div style="color:var(--yellow); font-family:monospace;">HF_TOKEN=hf_your_token_here</div>
+        </div>
+        <div style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:12px; font-size:0.82rem; margin-bottom:12px;">
+          <div style="color:var(--muted); margin-bottom:8px;">2. Preencher placeholders em <code>hub/model_card.md</code> e <code>hub/dataset_card.md</code></div>
+          <div style="color:var(--yellow); font-family:monospace;">PLACEHOLDER_USERNAME → o teu username<br/>PLACEHOLDER_PERPLEXITY → 1.86<br/>PLACEHOLDER_LOSS → 0.6199</div>
+        </div>
+        <div style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:12px; font-size:0.82rem;">
+          <div style="color:var(--muted); margin-bottom:8px;">3. Fazer upload:</div>
+          <div style="color:var(--accent); font-family:monospace;">python upload_to_hub.py --username &lt;user&gt; --model --dataset</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 10. MELHORIAS POSSÍVEIS -->
+  <section>
+    <h2>10. Melhorias possíveis</h2>
+    <div class="card">
+      <p class="step-desc" style="margin-bottom:20px;">
+        Ordenadas por impacto esperado na qualidade do modelo. As primeiras têm maior retorno com menor esforço.
+      </p>
+
+      <div class="improvement-item">
+        <div class="imp-priority high">1</div>
+        <div class="imp-body">
+          <h4>Usar um modelo base em português</h4>
+          <p>O GPT-2 foi treinado quase exclusivamente em inglês. Partir de um modelo já pré-treinado em português (ex: <code>neuralmind/gpt2-large-portuguese</code> ou um Llama derivado PT) daria uma vantagem enorme — o modelo já "sabe" português antes do fine-tuning.</p>
+          <span class="imp-tag">alta prioridade</span>
+          <span class="imp-tag">mudança no model_name</span>
+          <span class="imp-tag">impacto muito alto</span>
+        </div>
+      </div>
+
+      <div class="improvement-item">
+        <div class="imp-priority high">2</div>
+        <div class="imp-body">
+          <h4>Treino em GPU</h4>
+          <p>Remover <code>use_cpu=True</code> e correr numa GPU (mesmo modesta, RTX 3060 ou Google Colab T4). Permite batch size 8–16, treino 10–50× mais rápido, e viabiliza modelos maiores e mais épocas sem horas de espera.</p>
+          <span class="imp-tag">alta prioridade</span>
+          <span class="imp-tag">remover use_cpu=True</span>
+          <span class="imp-tag">colab grátis disponível</span>
+        </div>
+      </div>
+
+      <div class="improvement-item">
+        <div class="imp-priority high">3</div>
+        <div class="imp-body">
+          <h4>Mais dados e maior diversidade</h4>
+          <p>500 exemplos é um bom começo, mas os melhores resultados com LoRA aparecem entre 1 000–10 000 exemplos. Integrar datasets públicos em português (ex: datasets do HuggingFace Hub como <code>portuguese_qa</code>, Wikipedia PT, ou conversas reais) multiplicaria a diversidade sem esforço manual.</p>
+          <span class="imp-tag">alta prioridade</span>
+          <span class="imp-tag">HuggingFace Hub</span>
+          <span class="imp-tag">datasets públicos PT</span>
+        </div>
+      </div>
+
+      <div class="improvement-item">
+        <div class="imp-priority medium">4</div>
+        <div class="imp-body">
+          <h4>Gradient accumulation</h4>
+          <p>Com CPU e batch size 2, o gradiente é muito ruidoso. Adicionar <code>gradient_accumulation_steps=8</code> no SFTConfig simula um batch size de 16 sem consumir mais memória — acumula gradientes de 8 passos antes de atualizar os pesos. Melhora a estabilidade do treino.</p>
+          <span class="imp-tag">impacto médio</span>
+          <span class="imp-tag">1 linha de código</span>
+        </div>
+      </div>
+
+      <div class="improvement-item">
+        <div class="imp-priority medium">5</div>
+        <div class="imp-body">
+          <h4>Learning rate scheduler</h4>
+          <p>Adicionar <code>lr_scheduler_type="cosine"</code> e <code>warmup_ratio=0.1</code>. O scheduler começa com lr baixo (warmup), sobe ao máximo, e vai decrescendo suavemente (cosine annealing). Evita instabilidades no início e melhora a convergência no final.</p>
+          <span class="imp-tag">impacto médio</span>
+          <span class="imp-tag">boa prática standard</span>
+        </div>
+      </div>
+
+      <div class="improvement-item">
+        <div class="imp-priority medium">6</div>
+        <div class="imp-body">
+          <h4>Rank LoRA maior (r=16 ou r=32)</h4>
+          <p>Com o dataset atual de 500 exemplos, rank 8 está adequado. Com um dataset maior (1 000+), aumentar para r=16 ou r=32 dá ao LoRA mais capacidade de aprendizagem. O custo é um ficheiro de adaptadores ligeiramente maior (~10–20 MB).</p>
+          <span class="imp-tag">aumentar após mais dados</span>
+          <span class="imp-tag">ajustar lora_alpha = 2×r</span>
+        </div>
+      </div>
+
+      <div class="improvement-item">
+        <div class="imp-priority medium">7</div>
+        <div class="imp-body">
+          <h4>Adicionar mais módulos LoRA</h4>
+          <p>Atualmente apenas <code>c_attn</code> e <code>c_proj</code> têm adaptadores. Adicionar as camadas MLP (<code>c_fc</code>, <code>c_mlp</code>) aumenta a expressividade do fine-tuning. Útil quando o modelo precisa de aprender padrões de conteúdo, não só de atenção.</p>
+          <span class="imp-tag">exploração</span>
+          <span class="imp-tag">mais params treináveis</span>
+        </div>
+      </div>
+
+      <div class="improvement-item">
+        <div class="imp-priority low">8</div>
+        <div class="imp-body">
+          <h4>Métricas de avaliação adicionais</h4>
+          <p>A perplexidade mede fluência mas não qualidade das respostas. Adicionar BLEU, ROUGE-L, ou avaliação humana permitiria perceber se as respostas são factualmente corretas e não apenas fluentes.</p>
+          <span class="imp-tag">avaliação mais rigorosa</span>
+          <span class="imp-tag">sacrebleu, rouge-score</span>
+        </div>
+      </div>
+
+      <div class="improvement-item">
+        <div class="imp-priority low">9</div>
+        <div class="imp-body">
+          <h4>Quantização do modelo (int8 / int4)</h4>
+          <p>Usar <code>bitsandbytes</code> para carregar o GPT-2 em int8 ou int4 durante o fine-tuning (QLoRA). Reduz o consumo de memória a metade ou um quarto, permitindo modelos maiores em hardware limitado.</p>
+          <span class="imp-tag">requer GPU</span>
+          <span class="imp-tag">QLoRA</span>
+          <span class="imp-tag">bitsandbytes</span>
+        </div>
+      </div>
+
+      <div class="improvement-item">
+        <div class="imp-priority low">10</div>
+        <div class="imp-body">
+          <h4>Eliminar o caminho "pré-treino do zero"</h4>
+          <p>Os resultados confirmam que treinar do zero com 500 exemplos não é viável (perplexidade 7727). O código pode ser simplificado para focar exclusivamente no LoRA, reduzindo manutenção e confusão conceptual.</p>
+          <span class="imp-tag">simplificação</span>
+          <span class="imp-tag">remover pretrain.py do pipeline principal</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <footer style="border-top:1px solid var(--border); padding-top:20px; text-align:center; color:var(--muted); font-size:0.82rem;">
+    ModelTraining &nbsp;·&nbsp; Qwen2.5-1.5B + LoRA + FastAPI &nbsp;·&nbsp; Atualizado em 2026-05-21 &nbsp;·&nbsp; Qwen2.5 LoRA: 1.86 perp
+  </footer>
+
+</div>
+</body>
+</html>

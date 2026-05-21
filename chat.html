@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat — Qwen2.5 PT-PT</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f1117;
+      color: #e8eaf0;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      padding: 14px 20px;
+      border-bottom: 1px solid #1e2130;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #13161f;
+      flex-shrink: 0;
+    }
+
+    .model-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: #22c55e;
+      flex-shrink: 0;
+    }
+    .model-dot.offline { background: #ef4444; }
+
+    header h1 { font-size: 15px; font-weight: 600; }
+
+    .model-tag {
+      margin-left: auto;
+      font-size: 11px;
+      color: #6b7280;
+      background: #1e2130;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    /* ── Messages ── */
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .msg-row {
+      display: flex;
+      padding: 0 20px;
+    }
+    .msg-row.user { justify-content: flex-end; }
+    .msg-row.assistant { justify-content: flex-start; }
+
+    .bubble {
+      max-width: min(520px, 80%);
+      padding: 10px 14px;
+      border-radius: 16px;
+      font-size: 14px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .msg-row.user .bubble {
+      background: #2563eb;
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+
+    .msg-row.assistant .bubble {
+      background: #1e2130;
+      color: #e8eaf0;
+      border-bottom-left-radius: 4px;
+    }
+
+    .msg-row.assistant.thinking .bubble {
+      color: #6b7280;
+      font-style: italic;
+    }
+
+    .msg-row.error .bubble {
+      background: #2d1515;
+      color: #f87171;
+    }
+
+    /* ── Typing indicator ── */
+    .dots span {
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #6b7280;
+      margin: 0 2px;
+      animation: bounce 1.2s infinite;
+    }
+    .dots span:nth-child(2) { animation-delay: 0.2s; }
+    .dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce {
+      0%, 80%, 100% { transform: translateY(0); }
+      40% { transform: translateY(-5px); }
+    }
+
+    /* ── Input area ── */
+    #input-area {
+      padding: 14px 20px 20px;
+      border-top: 1px solid #1e2130;
+      background: #13161f;
+      flex-shrink: 0;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+
+    #user-input {
+      flex: 1;
+      background: #1e2130;
+      border: 1px solid #2a2f45;
+      border-radius: 12px;
+      color: #e8eaf0;
+      font-size: 14px;
+      padding: 10px 14px;
+      resize: none;
+      min-height: 42px;
+      max-height: 140px;
+      line-height: 1.5;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    #user-input:focus { border-color: #2563eb; }
+    #user-input::placeholder { color: #4b5563; }
+
+    #send-btn {
+      background: #2563eb;
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      cursor: pointer;
+      width: 42px; height: 42px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s, opacity 0.15s;
+    }
+    #send-btn:hover { background: #1d4ed8; }
+    #send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .settings-row {
+      display: flex;
+      gap: 16px;
+      margin-top: 10px;
+      align-items: center;
+    }
+
+    .setting {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    .setting input[type=range] {
+      width: 80px;
+      accent-color: #2563eb;
+    }
+
+    .setting span { min-width: 28px; color: #9ca3af; }
+
+    #clear-btn {
+      margin-left: auto;
+      background: none;
+      border: 1px solid #2a2f45;
+      border-radius: 6px;
+      color: #6b7280;
+      font-size: 12px;
+      padding: 4px 10px;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    #clear-btn:hover { border-color: #6b7280; color: #9ca3af; }
+
+    /* ── Empty state ── */
+    #empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: #4b5563;
+      pointer-events: none;
+    }
+    #empty-state svg { opacity: 0.3; }
+    #empty-state p { font-size: 14px; }
+
+    .suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 12px;
+      pointer-events: all;
+    }
+
+    .suggestion {
+      background: #1e2130;
+      border: 1px solid #2a2f45;
+      border-radius: 8px;
+      color: #9ca3af;
+      font-size: 13px;
+      padding: 6px 12px;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .suggestion:hover { border-color: #2563eb; color: #e8eaf0; }
+
+    /* ── Scrollbar ── */
+    #messages::-webkit-scrollbar { width: 4px; }
+    #messages::-webkit-scrollbar-track { background: transparent; }
+    #messages::-webkit-scrollbar-thumb { background: #2a2f45; border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="model-dot" id="status-dot"></div>
+  <h1>Chat PT-PT</h1>
+  <span class="model-tag" id="model-label">a verificar...</span>
+</header>
+
+<div id="messages">
+  <div id="empty-state">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    </svg>
+    <p>Faz uma pergunta em português</p>
+    <div class="suggestions">
+      <button class="suggestion" onclick="useSuggestion(this)">Qual é a capital de Portugal?</button>
+      <button class="suggestion" onclick="useSuggestion(this)">O que é a fotossíntese?</button>
+      <button class="suggestion" onclick="useSuggestion(this)">Quem escreveu Os Lusíadas?</button>
+      <button class="suggestion" onclick="useSuggestion(this)">Quanto é 12 × 13?</button>
+      <button class="suggestion" onclick="useSuggestion(this)">O que é um LLM?</button>
+    </div>
+  </div>
+</div>
+
+<div id="input-area">
+  <div class="input-row">
+    <textarea
+      id="user-input"
+      placeholder="Escreve uma pergunta..."
+      rows="1"
+    ></textarea>
+    <button id="send-btn" onclick="sendMessage()" title="Enviar (Enter)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="22" y1="2" x2="11" y2="13"/>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+      </svg>
+    </button>
+  </div>
+  <div class="settings-row">
+    <div class="setting">
+      <label for="max-tokens">Tokens</label>
+      <input type="range" id="max-tokens" min="20" max="200" value="80" step="10" oninput="updateLabel('max-tokens','tokens-val')">
+      <span id="tokens-val">80</span>
+    </div>
+    <div class="setting">
+      <label for="temperature">Temp</label>
+      <input type="range" id="temperature" min="0.1" max="1.5" value="0.7" step="0.1" oninput="updateLabel('temperature','temp-val')">
+      <span id="temp-val">0.7</span>
+    </div>
+    <button id="clear-btn" onclick="clearChat()">Limpar</button>
+  </div>
+</div>
+
+<script>
+  const API_BASE = "http://localhost:8000";
+  const messagesEl = document.getElementById("messages");
+  const inputEl = document.getElementById("user-input");
+  const sendBtn = document.getElementById("send-btn");
+  const emptyState = document.getElementById("empty-state");
+  const statusDot = document.getElementById("status-dot");
+  const modelLabel = document.getElementById("model-label");
+
+  // ── Check API status on load ──────────────────────────
+  async function checkStatus() {
+    try {
+      const res = await fetch(`${API_BASE}/`, { signal: AbortSignal.timeout(3000) });
+      const data = await res.json();
+      statusDot.classList.remove("offline");
+      modelLabel.textContent = data.modelo || "modelo";
+    } catch {
+      statusDot.classList.add("offline");
+      modelLabel.textContent = "API offline";
+    }
+  }
+  checkStatus();
+
+  // ── Auto-resize textarea ──────────────────────────────
+  inputEl.addEventListener("input", () => {
+    inputEl.style.height = "auto";
+    inputEl.style.height = Math.min(inputEl.scrollHeight, 140) + "px";
+  });
+
+  // ── Enter to send, Shift+Enter for newline ────────────
+  inputEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  function updateLabel(sliderId, labelId) {
+    document.getElementById(labelId).textContent =
+      document.getElementById(sliderId).value;
+  }
+
+  function useSuggestion(btn) {
+    inputEl.value = btn.textContent;
+    inputEl.dispatchEvent(new Event("input"));
+    inputEl.focus();
+  }
+
+  function hideEmpty() {
+    if (emptyState) emptyState.style.display = "none";
+  }
+
+  function addMessage(role, text) {
+    hideEmpty();
+    const row = document.createElement("div");
+    row.className = `msg-row ${role}`;
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.textContent = text;
+    row.appendChild(bubble);
+    messagesEl.appendChild(row);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return bubble;
+  }
+
+  function addTyping() {
+    hideEmpty();
+    const row = document.createElement("div");
+    row.className = "msg-row assistant thinking";
+    row.id = "typing-indicator";
+    row.innerHTML = '<div class="bubble dots"><span></span><span></span><span></span></div>';
+    messagesEl.appendChild(row);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  function removeTyping() {
+    const el = document.getElementById("typing-indicator");
+    if (el) el.remove();
+  }
+
+  async function sendMessage() {
+    const text = inputEl.value.trim();
+    if (!text || sendBtn.disabled) return;
+
+    addMessage("user", text);
+    inputEl.value = "";
+    inputEl.style.height = "auto";
+    sendBtn.disabled = true;
+    addTyping();
+
+    const maxTokens = parseInt(document.getElementById("max-tokens").value);
+    const temperature = parseFloat(document.getElementById("temperature").value);
+
+    try {
+      const res = await fetch(`${API_BASE}/perguntar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pergunta: text, max_tokens: maxTokens, temperature }),
+      });
+
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`HTTP ${res.status}: ${err}`);
+      }
+
+      const data = await res.json();
+      removeTyping();
+      addMessage("assistant", data.resposta || "(resposta vazia)");
+    } catch (err) {
+      removeTyping();
+      const row = document.createElement("div");
+      row.className = "msg-row error";
+      row.innerHTML = `<div class="bubble">Erro: ${err.message}</div>`;
+      messagesEl.appendChild(row);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+      // Re-check API status
+      checkStatus();
+    } finally {
+      sendBtn.disabled = false;
+      inputEl.focus();
+    }
+  }
+
+  function clearChat() {
+    // Remove all message rows but keep the empty state
+    Array.from(messagesEl.children).forEach(child => {
+      if (child.id !== "empty-state") child.remove();
+    });
+    if (emptyState) emptyState.style.display = "";
+  }
+</script>
+
+</body>
+</html>
