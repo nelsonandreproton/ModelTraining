@@ -33,7 +33,7 @@ def responder(pergunta: str, historico: list, max_tokens: int, temperature: floa
     return resposta
 
 
-with gr.Blocks(title="Qwen2.5-1.5B PT-QA", theme=gr.themes.Soft()) as demo:
+with gr.Blocks(title="Qwen2.5-1.5B PT-QA") as demo:
     gr.Markdown(
         """
         # Qwen2.5-1.5B — Perguntas & Respostas em Português
@@ -42,7 +42,7 @@ with gr.Blocks(title="Qwen2.5-1.5B PT-QA", theme=gr.themes.Soft()) as demo:
         """
     )
 
-    chatbot = gr.Chatbot(label="Conversa", height=450, type="messages")
+    chatbot = gr.Chatbot(label="Conversa", height=450)
 
     with gr.Row():
         txt = gr.Textbox(
@@ -72,10 +72,7 @@ with gr.Blocks(title="Qwen2.5-1.5B PT-QA", theme=gr.themes.Soft()) as demo:
         if not mensagem.strip():
             return historico, ""
         resposta = responder(mensagem, historico, max_tok, temp)
-        historico = historico + [
-            {"role": "user", "content": mensagem},
-            {"role": "assistant", "content": resposta},
-        ]
+        historico = historico + [(mensagem, resposta)]
         return historico, ""
 
     btn_enviar.click(
