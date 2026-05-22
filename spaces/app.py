@@ -42,7 +42,7 @@ with gr.Blocks(title="Qwen2.5-1.5B PT-QA") as demo:
         """
     )
 
-    chatbot = gr.Chatbot(label="Conversa", height=450)
+    chatbot = gr.Chatbot(label="Conversa", height=450, type="messages")
 
     with gr.Row():
         txt = gr.Textbox(
@@ -72,7 +72,10 @@ with gr.Blocks(title="Qwen2.5-1.5B PT-QA") as demo:
         if not mensagem.strip():
             return historico, ""
         resposta = responder(mensagem, historico, max_tok, temp)
-        historico = historico + [(mensagem, resposta)]
+        historico = historico + [
+            {"role": "user", "content": mensagem},
+            {"role": "assistant", "content": resposta},
+        ]
         return historico, ""
 
     btn_enviar.click(
