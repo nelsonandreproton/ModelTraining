@@ -1,6 +1,6 @@
 ---
 title: Qwen2.5-1.5B PT-QA
-emoji: 🇵🇹
+emoji: 🤖
 colorFrom: blue
 colorTo: green
 sdk: gradio
