@@ -252,7 +252,7 @@
       <span class="badge blue">Qwen2.5-1.5B</span>
       <span class="badge purple">LoRA / PEFT</span>
       <span class="badge green">FastAPI</span>
-      <span class="badge yellow">500 exemplos PT</span>
+      <span class="badge yellow">620+ exemplos PT</span>
       <span class="badge">Python 3.11+</span>
       <span class="badge">HuggingFace</span>
     </div>
@@ -286,7 +286,7 @@
           <span class="label">Framework ML</span>       <span class="val">PyTorch + Transformers</span>
           <span class="label">Datasets</span>           <span class="val">HuggingFace datasets (Arrow)</span>
           <span class="label">API</span>                <span class="val">FastAPI + Uvicorn</span>
-          <span class="label">Dataset</span>            <span class="val">500 pares Q&amp;A em português</span>
+          <span class="label">Dataset</span>            <span class="val">620+ pares Q&amp;A em português (expansível via Kaggle)</span>
           <span class="label">Hardware</span>           <span class="val">CPU (use_cpu=True)</span>
         </div>
       </div>
@@ -423,11 +423,13 @@
       <div class="step-file">create_dataset.py</div>
       <h3>Criação do dataset</h3>
       <p class="step-desc" style="margin-bottom:12px;">
-        Define manualmente 500 pares <code>instruction → response</code> em português,
+        Define 620+ pares <code>instruction → response</code> em português,
         cobrindo 20+ categorias temáticas (geografia, história, ciência, matemática, tecnologia,
         filosofia, saúde, cultura portuguesa, IA/ML, etc.).
         Guarda em formato Arrow, o formato nativo da biblioteca <code>datasets</code> da HuggingFace
         — eficiente para datasets tabulares e compatível com todos os trainers.
+        Pode ser expandido com pares gerados automaticamente via <code>generate_dataset.py</code> (LM Studio local)
+        ou <code>generate_dataset_kaggle.py</code> (Qwen2.5-3B na T4 do Kaggle) e filtrados pela pipeline de qualidade.
       </p>
       <div style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:12px; font-size:0.83rem; margin-bottom:10px;">
         <span style="color:var(--muted);">Estrutura de cada exemplo:</span><br/>
@@ -435,8 +437,9 @@
         <span style="color:var(--accent2);">response:</span> <span style="color:var(--yellow);">"A capital de Portugal é Lisboa."</span>
       </div>
       <div class="callout">
-        <strong>Porquê 500 exemplos?</strong> Abaixo de ~50 exemplos o LoRA apenas memoriza os dados sem generalizar.
-        500 exemplos diversificados permitem ao modelo aprender padrões de resposta em português em vez de decorar exemplos específicos.
+        <strong>Porquê 620+ exemplos?</strong> Abaixo de ~50 exemplos o LoRA apenas memoriza os dados sem generalizar.
+        620+ exemplos diversificados permitem ao modelo aprender padrões de resposta em português em vez de decorar exemplos específicos.
+        O dataset é expandível com pares gerados via Kaggle (Qwen2.5-3B) e filtrados automaticamente — placeholders não preenchidos, pares fora de tema Portugal e instruções truncadas são rejeitados antes da fusão.
       </div>
     </div>
 
@@ -682,11 +685,11 @@
     <div class="card">
       <div class="step-file">evaluate_models.py</div>
       <p class="step-desc" style="margin-bottom:20px;">
-        Compara os três modelos calculando a <strong>perplexidade</strong> em exemplos de Q&amp;A em português.
-        A perplexidade mede quão "surpreso" o modelo fica com o texto: é calculada como
-        <code>exp(loss)</code> onde o loss é a média do cross-entropy em cada token.
-        Perplexidade 10 significa que o modelo hesita em média entre 10 palavras possíveis a cada passo.
-        <strong>Quanto menor, melhor.</strong>
+        Avalia os modelos com 5 métricas complementares via <code>eval_compare.py</code>:
+        <strong>perplexidade</strong>, detecção de PT-BR, ROUGE-L, BERTScore e LLM-as-judge (Qwen2.5-7B via LM Studio).
+        Usa um conjunto de teste isolado de 25 exemplos que nunca entrou no treino, evitando data leakage.
+        O judge é corrigido para não favorecer respostas mais longas e penaliza PT-BR com fluência ≤ 2.
+        <strong>Quanto menor a perplexidade, melhor.</strong>
       </p>
 
       <div class="result-banner" style="grid-template-columns: 1fr 1fr;">
@@ -883,12 +886,14 @@
           </tr>
         </thead>
         <tbody>
-          <tr><td><code>create_dataset.py</code></td><td><span class="pill dataset">dataset</span></td><td>500 pares Q&amp;A em português, 20+ categorias</td></tr>
+          <tr><td><code>create_dataset.py</code></td><td><span class="pill dataset">dataset</span></td><td>620+ pares Q&amp;A em português, 20+ categorias</td></tr>
+          <tr><td><code>generate_dataset.py</code></td><td><span class="pill dataset">dataset</span></td><td>Gerador automático via LM Studio (local) — 9 formatos, filtros PT-PT</td></tr>
+          <tr><td><code>generate_dataset_kaggle.py</code></td><td><span class="pill dataset">dataset</span></td><td>Gerador automático via Kaggle T4 (Qwen2.5-3B) — FRESH_START, timestamps, filtros</td></tr>
           <tr><td><code>explore_dataset.py</code></td><td><span class="pill dataset">dataset</span></td><td>Template de chat + split 80/20 (400 train / 100 test)</td></tr>
           <tr><td><code>tokenize_dataset.py</code></td><td><span class="pill dataset">dataset</span></td><td>Tokeniza com GPT-2 BPE (max 512 tokens, padding EOS)</td></tr>
           <tr><td><code>finetune_lora.py</code></td><td><span class="pill train">treino</span></td><td>LoRA fine-tuning — rank 8, 20 épocas, lr 2e-4</td></tr>
           <tr><td><code>pretrain.py</code></td><td><span class="pill train">treino</span></td><td>Pré-treino tiny GPT-2 do zero (4 layers, d=128, ~3M params)</td></tr>
-          <tr><td><code>evaluate_models.py</code></td><td><span class="pill eval">avaliação</span></td><td>Perplexidade nos 2 modelos — Qwen2.5 + LoRA: 1.86, Base: 22.72</td></tr>
+          <tr><td><code>eval_compare.py</code></td><td><span class="pill eval">avaliação</span></td><td>Avaliação multi-métrica: perplexidade, PT-BR, ROUGE-L, BERTScore, LLM-judge — set isolado 25 ex.</td></tr>
           <tr><td><code>inference_pipeline.py</code></td><td><span class="pill infer">inferência</span></td><td>Geração de texto via pipeline HuggingFace</td></tr>
           <tr><td><code>api.py</code></td><td><span class="pill infer">inferência</span></td><td>FastAPI, porta 8000, endpoint POST /perguntar</td></tr>
           <tr><td><code>chat.html</code></td><td><span class="pill infer">inferência</span></td><td>Chat web — abre no browser com api.py a correr</td></tr>
@@ -969,9 +974,119 @@ model = AutoPeftModelForCausalLM.from_pretrained(
     </div>
   </section>
 
-  <!-- 10. MELHORIAS POSSÍVEIS -->
+  <!-- 10. KAGGLE DATASET GENERATION -->
   <section>
-    <h2>10. Melhorias possíveis</h2>
+    <h2>10. Geração de dataset no Kaggle (5000 pares)</h2>
+    <div class="card" style="margin-bottom:16px;">
+      <h3>Contexto</h3>
+      <p class="step-desc" style="margin-bottom:12px;">
+        O script <code>generate_dataset_kaggle.py</code> usa um Qwen2.5-3B-Instruct local numa GPU T4 do Kaggle
+        para gerar 5 000 pares Q&amp;A em PT-PT sobre Portugal. A geração é feita em sessões de 1 000 pares
+        porque o Kaggle não persiste <code>/kaggle/working/</code> entre sessões — é obrigatório fazer
+        "Save Version" manualmente antes de fechar.
+      </p>
+      <div class="callout">
+        <strong>Limitação da API Kaggle:</strong> A API do Kaggle não consegue disparar a execução de um notebook.
+        O botão "Run" tem de ser clicado manualmente na UI. O que a API consegue fazer é descarregar os outputs
+        após a execução (<code>kaggle kernels output &lt;slug&gt;</code>).
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <h3>Workflow por sessão (1 000 pares de cada vez)</h3>
+      <table class="setting-table">
+        <thead><tr><th>Sessão</th><th><code>TARGET</code></th><th><code>RESUME_INPUT_PATH</code></th><th class="meaning">Pares a gerar</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td><code>1000</code></td><td><code>""</code> (vazio)</td><td class="meaning">~950 (desconta os pares do teste)</td></tr>
+          <tr><td>2</td><td><code>2000</code></td><td><code>/kaggle/input/&lt;slug&gt;/generated_pairs.json</code></td><td class="meaning">1 000</td></tr>
+          <tr><td>3</td><td><code>3000</code></td><td>mesmo slug da sessão anterior</td><td class="meaning">1 000</td></tr>
+          <tr><td>4</td><td><code>4000</code></td><td>idem</td><td class="meaning">1 000</td></tr>
+          <tr><td>5</td><td><code>5000</code></td><td>idem</td><td class="meaning">1 000</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>Antes de correr cada sessão</h3>
+        <ol style="color:var(--muted); font-size:0.88rem; padding-left:18px; line-height:2;">
+          <li>Abrir <code>generate_dataset_kaggle.py</code></li>
+          <li>Definir <code>TEST_MODE = False</code></li>
+          <li>Definir <code>TARGET</code> = pares actuais + 1 000</li>
+          <li>Definir <code>RESUME_INPUT_PATH</code> (sessão 2+)</li>
+          <li>Colar o script num notebook Kaggle e clicar <strong>Run</strong></li>
+          <li>Confirmar que a primeira linha de progresso aparece:<br/>
+            <code style="color:var(--cyan); font-size:0.8rem;">[N/TARGET] formato | categoria → subtópico</code>
+          </li>
+        </ol>
+      </div>
+
+      <div class="card">
+        <h3>Quando a sessão termina</h3>
+        <ol style="color:var(--muted); font-size:0.88rem; padding-left:18px; line-height:2;">
+          <li>Verificar que a última linha é <code>Done. N pairs saved</code></li>
+          <li>Clicar <strong>"Save Version"</strong> no Kaggle — <span style="color:var(--red);">obrigatório</span>, sem isto o ficheiro perde-se</li>
+          <li>No painel Output, anotar o <strong>slug do dataset</strong> gerado</li>
+          <li>Na próxima sessão, adicionar esse dataset como <strong>Input dataset</strong></li>
+          <li>Definir <code>RESUME_INPUT_PATH = "/kaggle/input/&lt;slug&gt;/generated_pairs.json"</code></li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <h3>Monitorizar o progresso durante a geração</h3>
+      <p class="step-desc" style="margin-bottom:12px;">
+        Cada batch imprime uma linha. Valores saudáveis para T4 com Qwen2.5-3B fp16:
+      </p>
+      <table class="setting-table">
+        <thead><tr><th>Indicador</th><th>Valor esperado</th><th class="meaning">Problema se fora do intervalo</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>VRAM used after load</code></td>
+            <td>~7 GB</td>
+            <td class="meaning">Se &gt;14 GB → modelo a transbordar para CPU, geração muito lenta</td>
+          </tr>
+          <tr>
+            <td><code>tok/s</code></td>
+            <td>≥ 15 tok/s</td>
+            <td class="meaning">Se &lt;5 tok/s → geração na CPU; parar e investigar</td>
+          </tr>
+          <tr>
+            <td><code>[JSON truncated]</code></td>
+            <td>ocasional</td>
+            <td class="meaning">Se frequente → aumentar <code>MAX_NEW_TOKENS</code></td>
+          </tr>
+          <tr>
+            <td><code>[JSON parse failed]</code></td>
+            <td>raro</td>
+            <td class="meaning">Se frequente → verificar template de prompt (não pode ter <code>[placeholders]</code> literais)</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="callout" style="margin-top:12px;">
+        <strong>Configuração actual validada:</strong> Qwen2.5-3B-Instruct · fp16 · MAX_NEW_TOKENS=1500 · BATCH_SIZE=10 · ~16–17 tok/s · ~7 GB VRAM
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <h3>Após gerar os 5 000 pares</h3>
+      <p class="step-desc" style="margin-bottom:12px;">
+        Descarregar o ficheiro final e publicar no HuggingFace Hub como dataset separado:
+      </p>
+      <div style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:12px; font-size:0.82rem; margin-bottom:10px;">
+        <div style="color:var(--muted); margin-bottom:6px;">Descarregar via API Kaggle (depois de "Save Version"):</div>
+        <div style="color:var(--accent); font-family:monospace;">kaggle kernels output &lt;username&gt;/&lt;kernel-slug&gt; -p ./output/</div>
+      </div>
+      <div style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:12px; font-size:0.82rem;">
+        <div style="color:var(--muted); margin-bottom:6px;">Publicar no Hub:</div>
+        <div style="color:var(--accent); font-family:monospace;">python upload_to_hub.py --username &lt;user&gt; --dataset</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11. MELHORIAS POSSÍVEIS -->
+  <section>
+    <h2>11. Melhorias possíveis</h2>
     <div class="card">
       <p class="step-desc" style="margin-bottom:20px;">
         Ordenadas por impacto esperado na qualidade do modelo. As primeiras têm maior retorno com menor esforço.
@@ -1085,7 +1200,7 @@ model = AutoPeftModelForCausalLM.from_pretrained(
   </section>
 
   <footer style="border-top:1px solid var(--border); padding-top:20px; text-align:center; color:var(--muted); font-size:0.82rem;">
-    ModelTraining &nbsp;·&nbsp; Qwen2.5-1.5B + LoRA + FastAPI &nbsp;·&nbsp; Atualizado em 2026-05-21 &nbsp;·&nbsp; Qwen2.5 LoRA: 1.86 perp
+    ModelTraining &nbsp;·&nbsp; Qwen2.5-1.5B + LoRA + FastAPI &nbsp;·&nbsp; Atualizado em 2026-05-27 &nbsp;·&nbsp; Qwen2.5 LoRA: 1.86 perp &nbsp;·&nbsp; 620+ pares PT-PT
   </footer>
 
 </div>

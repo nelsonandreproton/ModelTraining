@@ -27,8 +27,8 @@ parser.add_argument(
 )
 parser.add_argument(
     "--dataset-repo",
-    default="portuguese-qa-instruct-500",
-    help="Dataset repo name (default: portuguese-qa-instruct-500)",
+    default="portuguese-qa-instruct-620",
+    help="Dataset repo name (default: portuguese-qa-instruct-620)",
 )
 args = parser.parse_args()
 

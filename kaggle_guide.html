@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guia Kaggle — Fine-tuning Qwen2.5 PT-PT</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 15px;
+      line-height: 1.65;
+      color: #1a1a2e;
+      background: #f4f6fb;
+      padding: 2rem 1rem;
+    }
+    .page { max-width: 860px; margin: 0 auto; }
+    h1 {
+      font-size: 1.8rem;
+      color: #0e3460;
+      margin-bottom: 0.3rem;
+    }
+    .subtitle {
+      font-size: 0.95rem;
+      color: #5a6a8a;
+      margin-bottom: 2.5rem;
+    }
+    .phase {
+      background: #fff;
+      border-radius: 10px;
+      padding: 1.5rem 1.8rem;
+      margin-bottom: 1.4rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      border-left: 5px solid #3a86ff;
+    }
+    .phase.prereq  { border-color: #ff6b6b; }
+    .phase.upload  { border-color: #f7b731; }
+    .phase.run     { border-color: #20bf6b; }
+    .phase.download{ border-color: #a55eea; }
+    .phase.tips    { border-color: #fd9644; }
+    .phase.gen     { border-color: #0fb9b1; }
+    .phase-header {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      margin-bottom: 1rem;
+    }
+    .phase-num {
+      background: #3a86ff;
+      color: #fff;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+    .phase.prereq  .phase-num { background: #ff6b6b; }
+    .phase.upload  .phase-num { background: #f7b731; color: #333; }
+    .phase.run     .phase-num { background: #20bf6b; }
+    .phase.download .phase-num { background: #a55eea; }
+    .phase.tips    .phase-num { background: #fd9644; }
+    .phase.gen     .phase-num { background: #0fb9b1; }
+    .phase-part {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #0e3460;
+      margin: 2rem 0 0.8rem;
+      padding: 0.4rem 0;
+      border-bottom: 2px solid #c7d2fe;
+    }
+    .phase h2 {
+      font-size: 1.05rem;
+      color: #0e3460;
+    }
+    ol, ul { padding-left: 1.4rem; }
+    li { margin-bottom: 0.55rem; }
+    code {
+      background: #eef2ff;
+      padding: 0.15em 0.45em;
+      border-radius: 4px;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 0.88em;
+      color: #3730a3;
+    }
+    pre {
+      background: #1e1e2e;
+      color: #cdd6f4;
+      padding: 1rem 1.2rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 0.85rem;
+      margin: 0.8rem 0;
+      line-height: 1.55;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      color: inherit;
+      font-size: inherit;
+    }
+    .warn {
+      background: #fff8e1;
+      border: 1px solid #ffe082;
+      border-radius: 6px;
+      padding: 0.7rem 1rem;
+      margin: 0.8rem 0;
+      font-size: 0.9rem;
+      color: #5d4037;
+    }
+    .warn strong { color: #e65100; }
+    .ok {
+      background: #e8f5e9;
+      border: 1px solid #a5d6a7;
+      border-radius: 6px;
+      padding: 0.7rem 1rem;
+      margin: 0.8rem 0;
+      font-size: 0.9rem;
+      color: #1b5e20;
+    }
+    .badge {
+      display: inline-block;
+      background: #e0e7ff;
+      color: #3730a3;
+      padding: 0.1em 0.6em;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-left: 0.3rem;
+    }
+    .badge.green { background: #dcfce7; color: #166534; }
+    .badge.red   { background: #fee2e2; color: #991b1b; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.8rem 0;
+      font-size: 0.9rem;
+    }
+    th {
+      background: #eef2ff;
+      text-align: left;
+      padding: 0.5rem 0.8rem;
+      color: #0e3460;
+    }
+    td { padding: 0.45rem 0.8rem; border-bottom: 1px solid #e8ecf4; }
+    tr:last-child td { border-bottom: none; }
+    .step-sub {
+      margin-top: 0.6rem;
+      padding-left: 1rem;
+      border-left: 3px solid #e0e7ff;
+      color: #444;
+    }
+    footer {
+      text-align: center;
+      font-size: 0.82rem;
+      color: #8a9ab5;
+      margin-top: 2.5rem;
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <h1>Kaggle GPU Guide</h1>
+  <p class="subtitle">Fine-tuning Qwen2.5-1.5B-Instruct com LoRA em PT-PT &mdash; dois notebooks Kaggle: geração de dataset + treino do modelo</p>
+
+  <div class="phase gen" style="padding:1rem 1.8rem; margin-bottom:1rem;">
+    <strong>Visão geral do processo (dois notebooks)</strong>
+    <ol style="margin-top:0.6rem">
+      <li><strong>Notebook A — Geração do Dataset:</strong> Usa Qwen2.5-7B-Instruct no T4 para gerar ~5000 pares PT-PT sobre Portugal. Demora ~8-12h. Resultado: <code>generated_pairs.json</code>.</li>
+      <li><strong>Notebook B — Treino do Modelo:</strong> Fine-tune do Qwen2.5-1.5B-Instruct com LoRA no T4. Demora ~1-2h. Resultado: adaptador LoRA publicado no HuggingFace Hub.</li>
+    </ol>
+    <div class="warn" style="margin-top:0.7rem">
+      <strong>Quota:</strong> Cada notebook usa GPU separado. Ambos cabem dentro das 30h/semana gratuitas (geração ~10h + treino ~1.5h).
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="phase-part">Parte A — Geração do Dataset (Notebook 1)</div>
+  <!-- ═══════════════════════════════════════════════════════ -->
+
+  <!-- PHASE A0: Dataset gen prereqs -->
+  <div class="phase prereq">
+    <div class="phase-header">
+      <div class="phase-num">A0</div>
+      <h2>Pré-requisitos para a Geração</h2>
+    </div>
+    <ol>
+      <li><strong>Conta Kaggle verificada por telefone</strong> — necessária para acesso à internet (download Qwen2.5-7B do HF Hub).</li>
+      <li><strong>HuggingFace token com permissão de leitura</strong> — para descarregar o modelo gerador.<br>
+        <div class="step-sub">
+          <code>huggingface.co → Settings → Access Tokens → New Token</code> (tipo <code>Read</code> é suficiente para esta fase).
+        </div>
+      </li>
+      <li><strong>O dataset base já publicado no HF Hub</strong> — o script carrega <code>nelsondiasandre/portuguese-qa-instruct-620</code> para evitar duplicados. Se ainda não publicaste:<br>
+        <pre><code>.\venv\Scripts\activate
+python upload_to_hub.py --username nelsondiasandre --dataset</code></pre>
+      </li>
+    </ol>
+  </div>
+
+  <!-- PHASE A1: Create gen notebook -->
+  <div class="phase gen">
+    <div class="phase-header">
+      <div class="phase-num">A1</div>
+      <h2>Criar o Notebook de Geração</h2>
+    </div>
+    <ol>
+      <li>Vai a <code>kaggle.com/code</code> → <strong>New Notebook</strong>.</li>
+      <li>Painel lateral → <strong>Accelerator</strong> → <strong>GPU T4 x2</strong>.</li>
+      <li>Painel lateral → <strong>Internet</strong> → <strong>Internet on</strong>.</li>
+      <li>Menu superior → <strong>Add-ons → Secrets</strong> → adiciona <code>HF_TOKEN</code> (mesmo processo do passo 2 da Parte B).</li>
+    </ol>
+    <div class="warn">
+      <strong>Memória RAM:</strong> O modelo Qwen2.5-7B em bfloat16 ocupa ~15 GB de VRAM. Com T4 x2 tens 32 GB total — funciona. Com P100 (16 GB) pode dar OOM; usa T4 x2.
+    </div>
+  </div>
+
+  <!-- PHASE A2: Paste gen script -->
+  <div class="phase upload">
+    <div class="phase-header">
+      <div class="phase-num">A2</div>
+      <h2>Colar o Script de Geração</h2>
+    </div>
+    <p>Abre <code>generate_dataset_kaggle.py</code> do repositório local e copia o conteúdo integralmente para uma célula do notebook. O script:</p>
+    <table>
+      <tr><th>Passo</th><th>O que acontece</th></tr>
+      <tr><td>Instala deps</td><td><code>transformers</code>, <code>accelerate</code>, <code>bitsandbytes</code></td></tr>
+      <tr><td>Carrega base</td><td>Lê <code>portuguese-qa-instruct-620</code> para evitar duplicados</td></tr>
+      <tr><td>Carrega modelo</td><td><code>Qwen/Qwen2.5-7B-Instruct</code> em bfloat16 no GPU</td></tr>
+      <tr><td>Gera pares</td><td>37 categorias, 9 formatos, persona de historiador PT-PT</td></tr>
+      <tr><td>Rejeita PT-BR</td><td>Filtro regex elimina brasileirismos automaticamente</td></tr>
+      <tr><td>Guarda</td><td><code>/kaggle/working/generated_pairs.json</code> após cada batch</td></tr>
+    </table>
+    <div class="ok">
+      <code>RESUME=True</code> está activo por defeito: se a sessão for interrompida, o script retoma de onde parou ao voltar a correr.
+    </div>
+  </div>
+
+  <!-- PHASE A3: Run and monitor gen -->
+  <div class="phase run">
+    <div class="phase-header">
+      <div class="phase-num">A3</div>
+      <h2>Executar a Geração e Monitorizar</h2>
+    </div>
+    <ol>
+      <li>Executa a célula do script. Verás logs como:
+        <pre><code>Loading Qwen/Qwen2.5-7B-Instruct on GPU...
+Model loaded.
+Target: 5000 | Starting from: 0
+Topics: 37 categories, 370 subtopics
+
+[0/5000] factual               | Era dos Descobrimentos → Vasco da Gama...
+  +9 pairs (total: 9)
+[9/5000] correction            | Futebol Português → Benfica...
+  +8 pairs (total: 17)
+...</code></pre>
+      </li>
+      <li>
+        <strong>Tempo estimado:</strong>
+        <table>
+          <tr><th>Hardware</th><th>Pares/hora</th><th>Para 5000 pares</th></tr>
+          <tr><td>T4 x2 (recomendado)</td><td>~400–600</td><td>~8–12 horas</td></tr>
+          <tr><td>P100</td><td>~250–400</td><td>~12–20 horas</td></tr>
+        </table>
+      </li>
+      <li>O script guarda após cada batch de 10. Se a sessão terminar, os dados gerados até ao momento ficam guardados e a geração retoma com <code>RESUME=True</code>.</li>
+      <li>Para parar antes dos 5000: interrompe manualmente &mdash; o JSON parcial é válido e pode ser usado.</li>
+    </ol>
+    <div class="warn">
+      <strong>Sessão de 12h:</strong> Se a geração ultrapassar 12h, o Kaggle interrompe a sessão. Os dados ficam guardados. Cria uma nova sessão e volta a correr — retoma automaticamente.
+    </div>
+  </div>
+
+  <!-- PHASE A4: Download and merge -->
+  <div class="phase download">
+    <div class="phase-header">
+      <div class="phase-num">A4</div>
+      <h2>Descarregar e Integrar os Pares Gerados</h2>
+    </div>
+    <ol>
+      <li>
+        <strong>Descarregar do Kaggle:</strong>
+        <div class="step-sub">
+          Painel lateral → <strong>Output</strong> → <code>/kaggle/working/</code> → clica em <code>generated_pairs.json</code> → <strong>Download</strong>.<br>
+          Copia o ficheiro para <code>C:\dev\ModelTraining\generated_pairs.json</code>.
+        </div>
+      </li>
+      <li>
+        <strong>Inspecionar qualidade (opcional mas recomendado):</strong>
+        <pre><code>python -c "
+import json
+pairs = json.load(open('generated_pairs.json', encoding='utf-8'))
+print(f'Total pares: {len(pairs)}')
+print('\\nAmostra:')
+for p in pairs[:3]:
+    print(f'Q: {p[\"instruction\"]}')
+    print(f'A: {p[\"response\"][:80]}...')
+    print()
+"</code></pre>
+      </li>
+      <li>
+        <strong>Integrar no dataset base:</strong>
+        <pre><code>.\venv\Scripts\activate
+python generate_dataset.py --merge --out generated_pairs.json</code></pre>
+        Isto insere os pares gerados diretamente em <code>create_dataset.py</code> antes da conversão para HuggingFace Dataset.
+      </li>
+      <li>
+        <strong>Reconstruir e publicar o dataset expandido:</strong>
+        <pre><code>python create_dataset.py
+python explore_dataset.py
+python upload_to_hub.py --username nelsondiasandre --dataset --dataset-repo portuguese-qa-instruct-5k</code></pre>
+      </li>
+    </ol>
+    <div class="ok">
+      Após o upload, o dataset expandido estará em <code>nelsondiasandre/portuguese-qa-instruct-5k</code>. Actualiza <code>DATASET_NAME</code> em <code>finetune_lora_kaggle.py</code> antes do treino.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="phase-part">Parte B — Treino do Modelo (Notebook 2)</div>
+  <!-- ═══════════════════════════════════════════════════════ -->
+
+  <!-- PHASE 0: Prereqs -->
+  <div class="phase prereq">
+    <div class="phase-header">
+      <div class="phase-num">0</div>
+      <h2>Pré-requisitos &mdash; Antes de abrir o Kaggle</h2>
+    </div>
+    <ol>
+      <li>
+        <strong>Conta Kaggle verificada por telefone</strong> — necessária para acesso à internet nos notebooks (sem ela, os modelos do HuggingFace não podem ser descarregados).
+        <div class="step-sub">
+          Vai a <code>kaggle.com → Account → Phone Verification</code> e segue os passos.
+        </div>
+      </li>
+      <li>
+        <strong>HuggingFace token com permissão de escrita</strong> — necessário para descarregar o modelo base e publicar o adaptador treinado.
+        <div class="step-sub">
+          Vai a <code>huggingface.co → Settings → Access Tokens → New Token</code>.<br>
+          Escolhe tipo <code>Write</code>. Copia o token &mdash; vai precisar dele no passo 2.
+        </div>
+      </li>
+      <li>
+        <strong>Dataset expandido publicado no HuggingFace Hub</strong> &mdash; completa a Parte A primeiro para ter o dataset com ~5000+ pares.
+        <div class="step-sub">
+          Após a Parte A, o dataset deve estar em <code>nelsondiasandre/portuguese-qa-instruct-5k</code>.<br>
+          Se saltares a Parte A e quiseres treinar com o dataset base (620 pares), usa <code>portuguese-qa-instruct-620</code> — também funciona.
+        </div>
+      </li>
+    </ol>
+    <div class="warn">
+      <strong>Quota GPU Kaggle:</strong> 30 horas/semana de GPU gratuito. Cada sessão é limitada a ~12h seguidas. Após ~20 min de inatividade a sessão pode ser desligada &mdash; monitoriza ativamente ou guarda checkpoints.
+    </div>
+  </div>
+
+  <!-- PHASE 1: Create notebook -->
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num">1</div>
+      <h2>Criar o Notebook Kaggle</h2>
+    </div>
+    <ol>
+      <li>Vai a <code>kaggle.com/code</code> e clica em <strong>"New Notebook"</strong>.</li>
+      <li>No painel lateral direito, em <strong>Settings</strong>:
+        <ul>
+          <li><strong>Language:</strong> Python</li>
+          <li><strong>Environment:</strong> deixa o default (não precisas de imagem custom)</li>
+        </ul>
+      </li>
+      <li>
+        Activa o <strong>acelerador GPU</strong>:
+        <div class="step-sub">
+          Painel direito → <strong>Accelerator</strong> → seleciona <strong>GPU T4 x2</strong> (preferido) ou <strong>P100</strong>.
+          <span class="badge green">T4 x2 recomendado</span>
+        </div>
+      </li>
+      <li>
+        Activa o <strong>acesso à internet</strong>:
+        <div class="step-sub">
+          Painel direito → <strong>Internet</strong> → <strong>Internet on</strong> (requer verificação de telefone do passo 0).
+        </div>
+      </li>
+    </ol>
+    <div class="warn">
+      <strong>Atenção:</strong> Sem "Internet on", o notebook não consegue descarregar o modelo Qwen2.5 do HuggingFace.
+    </div>
+  </div>
+
+  <!-- PHASE 2: Add secret -->
+  <div class="phase upload">
+    <div class="phase-header">
+      <div class="phase-num">2</div>
+      <h2>Adicionar o HuggingFace Token como Secret</h2>
+    </div>
+    <ol>
+      <li>No notebook, clica em <strong>Add-ons</strong> (menu superior) → <strong>Secrets</strong>.</li>
+      <li>Clica <strong>"Add a new secret"</strong>.</li>
+      <li>Preenche:
+        <ul>
+          <li><strong>Name:</strong> <code>HF_TOKEN</code></li>
+          <li><strong>Value:</strong> cola o teu token HuggingFace (começa por <code>hf_</code>)</li>
+        </ul>
+      </li>
+      <li>Clica <strong>Save</strong> e certifica-te que o toggle "Attach to notebook" está <strong>activo</strong>.</li>
+    </ol>
+    <div class="ok">
+      Os secrets são encriptados e não aparecem nos logs. Nunca coloca o token directamente no código.
+    </div>
+  </div>
+
+  <!-- PHASE 3: Install deps -->
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num">3</div>
+      <h2>Instalar Dependências</h2>
+    </div>
+    <p>Na primeira célula do notebook, cola e executa:</p>
+    <pre><code>!pip install -q \
+    transformers==4.47.0 \
+    peft==0.14.0 \
+    trl==0.12.0 \
+    datasets==3.2.0 \
+    accelerate==1.2.1 \
+    bitsandbytes==0.45.0 \
+    evaluate==0.4.3</code></pre>
+    <div class="warn">
+      <strong>Demora ~3-5 min.</strong> Aguarda até ao ✓ antes de executar as células seguintes.
+    </div>
+  </div>
+
+  <!-- PHASE 4: Paste code -->
+  <div class="phase upload">
+    <div class="phase-header">
+      <div class="phase-num">4</div>
+      <h2>Colar o Código de Treino</h2>
+    </div>
+    <p>Abre o ficheiro <code>finetune_lora_kaggle.py</code> do repositório local. Se usaste o dataset expandido da Parte A, actualiza a linha <code>DATASET_NAME</code> antes de colar:</p>
+    <pre><code># Se fizeste a Parte A, muda esta linha no topo do script:
+DATASET_NAME = "nelsondiasandre/portuguese-qa-instruct-5k"   # dataset expandido
+# (por defeito está "nelsondiasandre/portuguese-qa-instruct-620")</code></pre>
+    <p>Copia o conteúdo integralmente para uma nova célula do notebook.</p>
+    <p style="margin-top:0.8rem">O script faz o seguinte automaticamente:</p>
+    <table>
+      <tr><th>Passo</th><th>O que acontece</th></tr>
+      <tr><td>Carregar token</td><td>Lê <code>HF_TOKEN</code> dos secrets do Kaggle</td></tr>
+      <tr><td>Carregar dataset</td><td><code>nelsondiasandre/portuguese-qa-instruct-620</code> do HF Hub</td></tr>
+      <tr><td>Separar dados</td><td>50 exemplos isolados para teste real, restantes em treino/eval</td></tr>
+      <tr><td>Carregar modelo</td><td><code>Qwen/Qwen2.5-1.5B-Instruct</code></td></tr>
+      <tr><td>Aplicar LoRA</td><td>r=16, alpha=32, módulos q/k/v/o_proj</td></tr>
+      <tr><td>Treinar</td><td>Até 20 épocas com early stopping (paciência=3)</td></tr>
+      <tr><td>Guardar</td><td>Adaptador em <code>/kaggle/working/my_lora_model</code></td></tr>
+      <tr><td>Publicar</td><td>Push para <code>nelsondiasandre/qwen25-1.5b-pt-qa-lora</code></td></tr>
+    </table>
+  </div>
+
+  <!-- PHASE 5: Run and monitor -->
+  <div class="phase run">
+    <div class="phase-header">
+      <div class="phase-num">5</div>
+      <h2>Executar e Monitorizar o Treino</h2>
+    </div>
+    <ol>
+      <li>Executa a célula de instalação (passo 3) primeiro. Aguarda conclusão.</li>
+      <li>Executa a célula do código de treino (passo 4).</li>
+      <li>Monitoriza o output: deverás ver logs como:
+        <pre><code>Loading dataset...
+Train: ~4165 | Eval: ~785 | Isolated test: 50   # com dataset 5k
+Loading tokenizer...
+trainable params: 9,175,040 || all params: 1,552,465,920 || trainable%: 0.59
+Starting training...
+{'loss': 2.34, 'eval_loss': 1.87, 'epoch': 1.0}
+...</code></pre>
+      </li>
+      <li>
+        <strong>Tempo estimado:</strong>
+        <table>
+          <tr><th>Hardware</th><th>Estimativa</th></tr>
+          <tr><td>T4 x2 (recomendado)</td><td>~45–90 min (early stop típico ~8-12 épocas)</td></tr>
+          <tr><td>P100</td><td>~60–120 min</td></tr>
+          <tr><td>CPU (local, ThinkBook)</td><td>~6+ horas — evitar</td></tr>
+        </table>
+      </li>
+      <li>
+        O treino para automaticamente quando a eval_loss não melhora durante 3 épocas consecutivas (early stopping). Não precisas de o parar manualmente.
+      </li>
+    </ol>
+    <div class="warn">
+      <strong>Sessão inactiva:</strong> Se não interagires com o notebook por ~20 min, o Kaggle pode interromper a sessão. Para evitar, clica ocasionalmente ou usa o botão "Keep session active" se disponível.
+    </div>
+  </div>
+
+  <!-- PHASE 6: Download results -->
+  <div class="phase download">
+    <div class="phase-header">
+      <div class="phase-num">6</div>
+      <h2>Descarregar o Adaptador Treinado</h2>
+    </div>
+    <p>Após o treino, o adaptador está disponível em dois sítios:</p>
+    <ol>
+      <li>
+        <strong>HuggingFace Hub (automático)</strong> — o script faz push automático. Acede em:<br>
+        <code>https://huggingface.co/nelsondiasandre/qwen25-1.5b-pt-qa-lora</code>
+      </li>
+      <li>
+        <strong>Descarregar directamente do Kaggle:</strong>
+        <div class="step-sub">
+          No painel lateral → <strong>Output</strong> → expande <code>/kaggle/working/</code><br>
+          Clica em <code>my_lora_model/</code> → <strong>Download</strong><br>
+          Os ficheiros importantes são: <code>adapter_config.json</code> e <code>adapter_model.safetensors</code>
+        </div>
+      </li>
+    </ol>
+    <div class="ok">
+      O adaptador LoRA é muito pequeno (~35 MB) comparado com o modelo completo (~3 GB). Apenas os pesos do adaptador são guardados.
+    </div>
+    <p style="margin-top:0.8rem">Para usar o adaptador localmente após descarregar:</p>
+    <pre><code>from transformers import AutoModelForCausalLM, AutoTokenizer
+from peft import PeftModel
+
+base = AutoModelForCausalLM.from_pretrained("Qwen/Qwen2.5-1.5B-Instruct")
+model = PeftModel.from_pretrained(base, "./my_lora_model")
+tokenizer = AutoTokenizer.from_pretrained("./my_lora_model")</code></pre>
+  </div>
+
+  <!-- PHASE 7: Quota and tips -->
+  <div class="phase tips">
+    <div class="phase-header">
+      <div class="phase-num">7</div>
+      <h2>Gestão da Quota e Boas Práticas</h2>
+    </div>
+    <table>
+      <tr><th>Recurso</th><th>Limite Kaggle Free</th><th>Nota</th></tr>
+      <tr><td>GPU/semana</td><td>30 horas</td><td>Reinicia às 00:00 UTC de segunda-feira</td></tr>
+      <tr><td>Duração máx. sessão</td><td>~12 horas</td><td>Guarda checkpoints regularmente</td></tr>
+      <tr><td>Output em disco</td><td>20 GB</td><td>Limpa outputs antigos se necessário</td></tr>
+      <tr><td>RAM</td><td>~13 GB</td><td>bf16=True ajuda a reduzir uso</td></tr>
+      <tr><td>Internet</td><td>Sim (com tel. verificado)</td><td>Necessária para HF Hub</td></tr>
+    </table>
+
+    <p style="margin-top:1rem"><strong>Se o treino for interrompido a meio:</strong></p>
+    <ol>
+      <li>O último checkpoint está em <code>/kaggle/working/lora_output/checkpoint-XXXX/</code></li>
+      <li>Para retomar, adiciona <code>resume_from_checkpoint=True</code> ao <code>SFTConfig</code> e volta a correr</li>
+      <li>Alternativamente, faz push do checkpoint para o HF Hub e recomeça a partir daí</li>
+    </ol>
+
+    <p style="margin-top:1rem"><strong>Se vires OOM (Out of Memory):</strong></p>
+    <ol>
+      <li>Reduz <code>per_device_train_batch_size</code> de 4 para 2</li>
+      <li>Aumenta <code>gradient_accumulation_steps</code> de 2 para 4 (mantém o batch efectivo igual)</li>
+      <li>Confirma que <code>bf16=True</code> está activo (já está no script)</li>
+    </ol>
+
+    <div class="warn">
+      <strong>bf16 vs fp16:</strong> Em T4, usa <code>bf16=True</code>. O T4 suporta bf16 nativo e é mais estável que fp16 para treino. Em P100, experimenta <code>fp16=True</code> se bf16 causar problemas (P100 tem suporte bf16 limitado).
+    </div>
+  </div>
+
+  <!-- PHASE 8: Verify -->
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num">8</div>
+      <h2>Verificar Resultados com eval_compare.py</h2>
+    </div>
+    <p>Após descarregar o adaptador para a máquina local, corre a avaliação completa:</p>
+    <pre><code># Activa o ambiente
+.\venv\Scripts\activate
+
+# Copia o adaptador para a pasta esperada
+# (ou carrega directamente do HF Hub no eval_compare.py)
+
+python eval_compare.py</code></pre>
+    <p style="margin-top:0.8rem">Métricas a comparar com a baseline:</p>
+    <table>
+      <tr><th>Métrica</th><th>Baseline (r=8)</th><th>Alvo (r=16)</th></tr>
+      <tr><td>Perplexidade isolada</td><td>3.52</td><td>&lt; 3.0</td></tr>
+      <tr><td>Marcadores PT-BR</td><td>0</td><td>0 (manter)</td></tr>
+      <tr><td>ROUGE-L</td><td>baseline</td><td>≥ baseline</td></tr>
+      <tr><td>BERTScore</td><td>baseline</td><td>≥ baseline</td></tr>
+      <tr><td>Win-rate (judge)</td><td>64%</td><td>&gt; 64%</td></tr>
+    </table>
+    <div class="ok">
+      O critério mais importante é manter os marcadores PT-BR em 0. Se subirem, o adaptador perdeu a principal vantagem conquistada.
+    </div>
+  </div>
+
+  <footer>
+    Projeto ModelTraining &mdash; PT-PT only &mdash; Notebook A: geração 5k pares (Qwen2.5-7B) &bull; Notebook B: LoRA r=16 (Qwen2.5-1.5B) &mdash; Kaggle Free Tier
+  </footer>
+
+</div>
+</body>
+</html>
