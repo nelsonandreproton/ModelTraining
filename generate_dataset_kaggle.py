@@ -25,15 +25,21 @@
 # ─────────────────────────────────────────────────────────────────────────────
 
 # ── Step 1: Install dependencies ─────────────────────────────────────────────
-# Upgrade bitsandbytes to a version that works with the current triton on Kaggle.
-# We force-reinstall to override whatever broken version Kaggle pre-installs.
+# Pin exact versions to avoid the accelerate 1.12.0 circular import bug
+# (accelerate.big_modeling ↔ accelerate.hooks circular dependency).
 import subprocess
 subprocess.run([
-    "pip", "install", "--upgrade", "--force-reinstall",
+    "pip", "install", "--quiet", "--force-reinstall",
+    "accelerate==0.34.2",
+    "transformers==4.47.0",
     "bitsandbytes>=0.43.0",
-    "transformers>=4.47.0",
-    "accelerate>=0.26.0",
 ], check=True)
+
+# Reload transformers/accelerate after reinstall so the new versions are active
+import importlib, sys
+for mod in list(sys.modules.keys()):
+    if mod.startswith("transformers") or mod.startswith("accelerate"):
+        del sys.modules[mod]
 
 # ── Imports ───────────────────────────────────────────────────────────────────
 import importlib
@@ -696,8 +702,9 @@ _PLACEHOLDER_RE = re.compile(
     r"\[Compara.{1,4}o|\[Explica.{1,4}o com detalhes|\[Explica.{1,4}o causal|"
     r"\[Defini.{1,4}o\]|\[exemplo real portugu|\[An.lise nuan|\[An.lise do impacto|"
     r"\[correc.{1,4}o com factos|\[processo portugu|\[itens portugu|"
-    r"\[facto portugu|\[afirma.{1,4}o sobre Portugal|afirmar que \[|raz.o \[",
-    re.IGNORECASE,
+    r"\[facto portugu|\[afirma.{1,4}o sobre Portugal|afirmar que \[|raz.o \[|"
+    r"^\s*\[[A-ZÁÀÂÃÉÊÍÓÔÕÚÇ][^\]]{5,}\]\s*[.\n]",
+    re.IGNORECASE | re.MULTILINE,
 )
 
 _OFFTRACK_RE = re.compile(r"^[^\n]{5,200}\?$")
