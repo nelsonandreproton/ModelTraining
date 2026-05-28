@@ -92,7 +92,7 @@ try:
     from datasets import load_dataset
     from kaggle_secrets import UserSecretsClient
     hf_token = UserSecretsClient().get_secret("HF_TOKEN")
-    base_ds = load_dataset("nelsondiasandre/portuguese-qa-instruct-500", token=hf_token)
+    base_ds = load_dataset("nelsondiasandre/portuguese-qa-instruct-raw", token=hf_token)
     for split in base_ds.values():
         for ex in split:
             if "instruction" in ex:
