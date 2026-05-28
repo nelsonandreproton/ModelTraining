@@ -30,15 +30,17 @@
 import subprocess
 subprocess.run([
     "pip", "install", "--quiet", "--force-reinstall",
+    "numpy==1.26.4",       # scipy _blas_supports_fpe requires numpy >=1.26.4
     "accelerate==0.34.2",
     "transformers==4.47.0",
     "bitsandbytes>=0.43.0",
 ], check=True)
 
-# Reload transformers/accelerate after reinstall so the new versions are active
+# Reload transformers/accelerate/numpy after reinstall so the new versions are active
 import importlib, sys
 for mod in list(sys.modules.keys()):
-    if mod.startswith("transformers") or mod.startswith("accelerate"):
+    if (mod.startswith("transformers") or mod.startswith("accelerate")
+            or mod.startswith("numpy") or mod == "scipy"):
         del sys.modules[mod]
 
 # ── Imports ───────────────────────────────────────────────────────────────────
