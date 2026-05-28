@@ -37,7 +37,7 @@ if not os.path.exists(_MARKER):
     subprocess.run([
         "pip", "install", "--quiet",
         "accelerate==0.34.2",
-        "transformers==4.47.0",
+        "transformers==4.44.2",
         "bitsandbytes>=0.43.0",
     ], check=True)
     open(_MARKER, "w").close()
