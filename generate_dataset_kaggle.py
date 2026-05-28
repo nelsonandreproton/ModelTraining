@@ -30,17 +30,16 @@
 import subprocess
 subprocess.run([
     "pip", "install", "--quiet", "--force-reinstall",
-    "numpy==1.26.4",       # scipy _blas_supports_fpe requires numpy >=1.26.4
     "accelerate==0.34.2",
     "transformers==4.47.0",
     "bitsandbytes>=0.43.0",
 ], check=True)
 
-# Reload transformers/accelerate/numpy after reinstall so the new versions are active
+# Reload transformers/accelerate after reinstall so the new versions are active.
+# Do NOT evict numpy/scipy — reinstalling numpy mid-kernel corrupts its C extensions.
 import importlib, sys
 for mod in list(sys.modules.keys()):
-    if (mod.startswith("transformers") or mod.startswith("accelerate")
-            or mod.startswith("numpy") or mod == "scipy"):
+    if mod.startswith("transformers") or mod.startswith("accelerate"):
         del sys.modules[mod]
 
 # ── Imports ───────────────────────────────────────────────────────────────────
@@ -66,11 +65,11 @@ def _try_import_bnb_config():
 
 # ── Config ────────────────────────────────────────────────────────────────────
 # Set TEST_MODE = True for a quick 10-pair sanity check before the full run.
-TEST_MODE   = True          # ← CHANGE TO False FOR FULL RUN
+TEST_MODE   = False         # ← CHANGE TO False FOR FULL RUN
 
-TARGET      = 50 if TEST_MODE else 1000
+TARGET      = 50 if TEST_MODE else 2000
 BATCH_SIZE  = 5  if TEST_MODE else 5
-FRESH_START = True   # ← True = always generate from scratch, ignoring any existing output file
+FRESH_START = False  # ← True = always generate from scratch, ignoring any existing output file
 
 GENERATOR_MODEL  = "Qwen/Qwen2.5-3B-Instruct"
 OUTPUT_FILE      = "/kaggle/working/generated_pairs.json"
@@ -79,7 +78,7 @@ TEMPERATURE      = 0.85
 
 # Resume: set this to the path of a previously saved generated_pairs.json
 # mounted as an input dataset, e.g. "/kaggle/input/YOUR-DATASET/generated_pairs.json"
-RESUME_INPUT_PATH = ""   # leave "" to start fresh
+RESUME_INPUT_PATH = "/kaggle/input/pt-qa-generated-1001/generated_pairs_1001.json"   # leave "" to start fresh
 
 # ── VRAM / GPU check ─────────────────────────────────────────────────────────
 print(f"CUDA available: {torch.cuda.is_available()}", flush=True)
