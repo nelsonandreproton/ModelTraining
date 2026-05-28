@@ -884,8 +884,12 @@ def generate_batch(topic, subtopic, fmt, n, existing):
     for p in pairs:
         if not isinstance(p, dict):
             continue
-        instr = p.get("instruction", "").strip()
-        resp  = p.get("response",    "").strip()
+        instr = p.get("instruction", "")
+        resp  = p.get("response",    "")
+        if not isinstance(instr, str) or not isinstance(resp, str):
+            continue
+        instr = instr.strip()
+        resp  = resp.strip()
         if not is_valid_pair(instr, resp, existing):
             if instr and resp:
                 print(f"  [rejected] {instr[:60]}", flush=True)
