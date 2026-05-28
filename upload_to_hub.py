@@ -128,7 +128,7 @@ if args.raw_pairs:
         exist_ok=True,
     )
 
-    ds.push_to_hub(raw_pairs_repo_id, token=HF_TOKEN)
+    ds.push_to_hub(raw_pairs_repo_id, token=HF_TOKEN, set_default=True)
     print(f"Raw pairs uploaded: https://huggingface.co/datasets/{raw_pairs_repo_id}")
     print(f"  columns: {ds.column_names}  |  rows: {len(ds)}")
 

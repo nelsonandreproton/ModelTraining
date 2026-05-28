@@ -802,8 +802,10 @@ _PLACEHOLDER_RE = re.compile(
     # debate template: instruction echoed with brackets around the claim
     r"afirmar que \[|"
     r"razão \[patrim|"
-    r"razão \[",
-    re.IGNORECASE,
+    r"razão \[|"
+    # Generic bracket placeholder: [Title Case phrase] at start of response or standalone
+    r"^\s*\[[A-ZÁÀÂÃÉÊÍÓÔÕÚÇ][^\]]{5,}\]\s*[.\n]",
+    re.IGNORECASE | re.MULTILINE,
 )
 
 
