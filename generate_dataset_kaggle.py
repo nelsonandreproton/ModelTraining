@@ -27,25 +27,28 @@
 # ── Step 1: Install dependencies ─────────────────────────────────────────────
 # Pin exact versions to avoid the accelerate 1.12.0 circular import bug
 # (accelerate.big_modeling ↔ accelerate.hooks circular dependency).
-import subprocess
-subprocess.run([
-    "pip", "install", "--quiet", "--force-reinstall",
-    "accelerate==0.34.2",
-    "transformers==4.47.0",
-    "bitsandbytes>=0.43.0",
-], check=True)
+import subprocess, sys, os
 
-# Reload transformers/accelerate after reinstall so the new versions are active.
-# Do NOT evict numpy/scipy — reinstalling numpy mid-kernel corrupts its C extensions.
-import importlib, sys
-for mod in list(sys.modules.keys()):
-    if mod.startswith("transformers") or mod.startswith("accelerate"):
-        del sys.modules[mod]
+_MARKER = "/tmp/_deps_installed"
+
+if not os.path.exists(_MARKER):
+    # First execution: install pinned deps, write marker, restart kernel.
+    # The marker prevents an infinite restart loop on the second run.
+    subprocess.run([
+        "pip", "install", "--quiet",
+        "accelerate==0.34.2",
+        "transformers==4.47.0",
+        "bitsandbytes>=0.43.0",
+    ], check=True)
+    open(_MARKER, "w").close()
+    print("Dependencies installed. Restarting kernel to load clean versions...", flush=True)
+    os.kill(os.getpid(), 9)  # hard kill → Kaggle auto-restarts the kernel
+
+# Second execution (after restart): marker exists, skip install, proceed normally.
+print("Dependencies already installed. Continuing.", flush=True)
 
 # ── Imports ───────────────────────────────────────────────────────────────────
-import importlib
 import json
-import os
 import re
 import random
 import time
