@@ -99,12 +99,14 @@ TOP_P            = 0.9
 # vLLM engine tuning
 MAX_MODEL_LEN          = 4096   # prompt + output budget; keep modest to fit a big KV-cache on T4
 GPU_MEMORY_UTILIZATION = 0.90
-# Kaggle commonly offers 2× T4. Tensor-parallel across both GPUs adds throughput + headroom.
-# BUT the 2× T4 have no NVLink/P2P, so vLLM's multi-GPU init sometimes deadlocks after
-# "Worker ready; awaiting tasks" even with disable_custom_all_reduce=True. If that happens,
-# set FORCE_SINGLE_GPU = True: a 7B-AWQ fits on one T4 (~5-6GB + KV cache in 15GB) and
-# single-GPU CANNOT hit the P2P hang. Cost: ~half the throughput (~25 min for 2000).
-FORCE_SINGLE_GPU = True      # ← True = one T4, no P2P hang; False = both GPUs, faster
+# Kaggle commonly offers 2× T4. Tensor-parallel across both GPUs adds throughput + headroom,
+# and works reliably WITH disable_custom_all_reduce=True (set in the LLM(...) call below) —
+# AS LONG AS the kernel is clean. If vLLM hangs after "Worker ready; awaiting tasks", the
+# cause is almost always STALE KERNEL STATE from a previous run, not a real P2P problem:
+# do "Restart & Clear Cell Outputs" → "Run All" and it inits cleanly on both GPUs.
+# Only as a last resort, if a clean restart still hangs, set FORCE_SINGLE_GPU = True
+# (a 7B-AWQ fits on one T4; ~half the throughput, but cannot hit any multi-GPU init issue).
+FORCE_SINGLE_GPU = False     # ← False = both GPUs (default, faster); True = single-T4 fallback
 NUM_GPUS = 1 if FORCE_SINGLE_GPU else max(1, torch.cuda.device_count())
 
 # Resume: set this to the path of a previously saved generated_pairs.json
