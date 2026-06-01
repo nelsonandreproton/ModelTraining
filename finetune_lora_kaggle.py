@@ -2,7 +2,24 @@
 # Dataset: nelsondiasandre/portuguese-qa-instruct-raw (PT-PT only, 5000+ pairs)
 # Upgrades vs local version: r=16, bf16=True, early stopping, GPU
 
+# ── Install a COHESIVE training stack (Kaggle ships an incompatible mix) ──────
+# Do NOT use `-U` here: upgrading each package independently produced a half-
+# upgraded transformers missing `divide_to_patches`, which trl's import chain
+# needs → ImportError. Pin a set released together. transformers 4.46.x is the
+# same line proven to install cleanly on this Kaggle image; trl 0.12.x is the
+# matching SFTConfig/processing_class API; peft 0.13.x + accelerate 1.1.x pair
+# with them. These satisfy this script's modern-but-stable TRL usage.
+import subprocess, sys
+subprocess.run([sys.executable, "-m", "pip", "install", "-q",
+                "transformers==4.46.1",
+                "trl==0.12.1",
+                "peft==0.13.2",
+                "accelerate==1.1.1",
+                "datasets==3.1.0"], check=True)
+print("deps installed — if you see an import error below, do Run > Restart & Run All once", flush=True)
+
 import os
+import torch
 from datasets import load_dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer, EarlyStoppingCallback
 from peft import LoraConfig, get_peft_model, TaskType
@@ -13,6 +30,9 @@ from trl import SFTConfig, SFTTrainer
 from kaggle_secrets import UserSecretsClient
 hf_token = UserSecretsClient().get_secret("HF_TOKEN")
 os.environ["HF_TOKEN"] = hf_token
+os.environ["PYTORCH_ALLOC_CONF"] = "expandable_segments:True"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"  # single T4 — DataParallel on 2×T4 duplicates
+                                           # model+grads on GPU0, causing OOM at backward pass
 
 # ── Config ────────────────────────────────────────────────────────────────────
 MODEL_NAME      = "Qwen/Qwen2.5-1.5B-Instruct"
@@ -38,6 +58,20 @@ eval_ds  = split["test"]
 
 print(f"Train: {len(train_ds)} | Eval: {len(eval_ds)} | Isolated test: {len(isolated_test)}")
 
+# ── Format into chat template ─────────────────────────────────────────────────
+# Raw dataset has instruction+response columns; SFTTrainer needs a single text
+# field with the chat template applied.
+def format_example(ex):
+    ex["text"] = (
+        f"<|im_start|>user\n{ex['instruction']}<|im_end|>\n"
+        f"<|im_start|>assistant\n{ex['response']}<|im_end|>"
+    )
+    return ex
+
+train_ds     = train_ds.map(format_example)
+eval_ds      = eval_ds.map(format_example)
+isolated_test = isolated_test.map(format_example)
+
 # ── Tokenizer ─────────────────────────────────────────────────────────────────
 print("Loading tokenizer...")
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, token=hf_token)
@@ -46,7 +80,12 @@ tokenizer.padding_side = "right"
 
 # ── Model ─────────────────────────────────────────────────────────────────────
 print("Loading model...")
-model = AutoModelForCausalLM.from_pretrained(MODEL_NAME, token=hf_token)
+model = AutoModelForCausalLM.from_pretrained(
+    MODEL_NAME,
+    token=hf_token,
+    torch_dtype=torch.float16,   # load directly in fp16 (~3GB vs ~6GB for fp32)
+    device_map="cuda:0",         # pin to GPU 0 — avoids DataParallel across both T4s
+)
 
 # ── LoRA config (r=16, alpha=32 — upgraded from r=8/alpha=16) ─────────────────
 lora_config = LoraConfig(
@@ -63,17 +102,17 @@ model.print_trainable_parameters()
 sft_config = SFTConfig(
     output_dir=OUTPUT_DIR,
     num_train_epochs=5,              # 5005 examples × 5 ≈ 3000 steps; was 20 (set for ~500 examples — overkill + overfit risk at 10× data). Early stopping still guards.
-    per_device_train_batch_size=4,   # larger batch on GPU
-    per_device_eval_batch_size=4,
-    gradient_accumulation_steps=2,
+    per_device_train_batch_size=2,   # T4 has 15GB; batch 4 OOMs with 1.5B model
+    per_device_eval_batch_size=2,
+    gradient_accumulation_steps=4,   # effective batch = 2×4 = 8, same as before
     learning_rate=2e-4,
     lr_scheduler_type="cosine",
     warmup_ratio=0.1,
-    bf16=True,                       # halves memory on T4/P100
+    fp16=True,                       # T4 = Turing arch, no bf16 support (needs Ampere+)
     eval_strategy="epoch",
     save_strategy="epoch",
     logging_steps=10,
-    max_length=512,
+    max_seq_length=512,              # trl 0.12 name (was max_length in newer trl)
     dataset_text_field="text",
     report_to="none",
     load_best_model_at_end=True,
