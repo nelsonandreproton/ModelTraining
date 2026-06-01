@@ -100,8 +100,12 @@ TOP_P            = 0.9
 MAX_MODEL_LEN          = 4096   # prompt + output budget; keep modest to fit a big KV-cache on T4
 GPU_MEMORY_UTILIZATION = 0.90
 # Kaggle commonly offers 2× T4. Tensor-parallel across both GPUs adds throughput + headroom.
-# Set to 1 to force single-GPU if you hit init issues.
-NUM_GPUS = max(1, torch.cuda.device_count())
+# BUT the 2× T4 have no NVLink/P2P, so vLLM's multi-GPU init sometimes deadlocks after
+# "Worker ready; awaiting tasks" even with disable_custom_all_reduce=True. If that happens,
+# set FORCE_SINGLE_GPU = True: a 7B-AWQ fits on one T4 (~5-6GB + KV cache in 15GB) and
+# single-GPU CANNOT hit the P2P hang. Cost: ~half the throughput (~25 min for 2000).
+FORCE_SINGLE_GPU = True      # ← True = one T4, no P2P hang; False = both GPUs, faster
+NUM_GPUS = 1 if FORCE_SINGLE_GPU else max(1, torch.cuda.device_count())
 
 # Resume: set this to the path of a previously saved generated_pairs.json
 # mounted as an input dataset, e.g. "/kaggle/input/YOUR-DATASET/generated_pairs.json"
