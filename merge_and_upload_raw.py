@@ -34,21 +34,63 @@ load_dotenv()
 # ô/ê form is simply never correct in PT-PT — so a literal replace is safe here.
 # A blanket ô→ó replace would be WRONG (it would corrupt "português", "têm",
 # "influência", "independência", which are all correct PT-PT circumflex words).
+# Explicit, complete word→word map for the PT-BR/PT-PT accent divergence: BR keeps
+# the circumflex (ô/ê) where PT-PT uses the acute (ó/é). This list was built by
+# extracting the COMPLETE set of unique ô/ê words across the whole dataset and
+# classifying each as BR-contaminant vs legitimate PT-PT — so the fix-set and the
+# verify-set are the SAME ground truth. CRITICAL: do NOT add the -ês family
+# (português, inglês, francês, mês, três) or vê/lê/crê — those are correct PT-PT.
 _PTBR_FIXES = {
+    # -ómico / -ómica
     "econômico": "económico", "econômica": "económica",
     "econômicos": "económicos", "econômicas": "económicas",
+    "socioeconômico": "socioeconómico", "socioeconômica": "socioeconómica",
+    "socioeconômicos": "socioeconómicos", "socioeconômicas": "socioeconómicas",
+    "astronômico": "astronómico", "astronômica": "astronómica",
+    "astronômicos": "astronómicos", "astronômicas": "astronómicas",
+    "gastronômico": "gastronómico", "gastronômica": "gastronómica",
+    "gastronômicos": "gastronómicos", "gastronômicas": "gastronómicas",
+    "harmônico": "harmónico", "harmônica": "harmónica",
+    "harmônicos": "harmónicos", "harmônicas": "harmónicas",
+    # -ónico / -ónica
     "arquitetônico": "arquitetónico", "arquitetônica": "arquitetónica",
     "arquitetônicos": "arquitetónicos", "arquitetônicas": "arquitetónicas",
-    "fenômeno": "fenómeno", "fenômenos": "fenómenos",
-    "gênero": "género", "gêneros": "géneros",
-    "tônico": "tónico", "tônica": "tónica",
-    "irônico": "irónico", "irônica": "irónica",
     "eletrônico": "eletrónico", "eletrônica": "eletrónica",
+    "eletrônicos": "eletrónicos", "eletrônicas": "eletrónicas",
+    "irônico": "irónico", "irônica": "irónica",
+    "irônicos": "irónicos", "irônicas": "irónicas",
+    "icônico": "icónico", "icônica": "icónica",
+    "icônicos": "icónicos", "icônicas": "icónicas",
     "crônico": "crónico", "crônica": "crónica",
-    "harmônico": "harmónico", "harmônica": "harmónica",
-    "sinônimo": "sinónimo", "antônimo": "antónimo",
+    "crônicos": "crónicos", "crônicas": "crónicas",
+    "tônico": "tónico", "tônica": "tónica",
+    "tônicos": "tónicos", "tônicas": "tónicas",
+    "monotônico": "monotónico", "monotônica": "monotónica",
+    # -ónomo / -ónoma
+    "astrônomo": "astrónomo", "astrônoma": "astrónoma",
+    "astrônomos": "astrónomos", "astrônomas": "astrónomas",
     "autônomo": "autónomo", "autônoma": "autónoma",
-    "sintôma": "sintoma", "monotônico": "monotónico",
+    "autônomos": "autónomos", "autônomas": "autónomas",
+    # -ómeno
+    "fenômeno": "fenómeno", "fenômenos": "fenómenos",
+    # -ónimo
+    "sinônimo": "sinónimo", "sinônimos": "sinónimos",
+    "antônimo": "antónimo", "antônimos": "antónimos",
+    "heterônimo": "heterónimo", "heterônimos": "heterónimos",
+    "heterônima": "heterónima", "heterônimas": "heterónimas",
+    # -ónia / -ónio (ô → ó)
+    "cerimônia": "cerimónia", "cerimônias": "cerimónias",
+    "patrimônio": "património", "patrimônios": "patrimónios",
+    "colônia": "colónia", "colônias": "colónias",
+    # -émio / -émico (ê → é)
+    "prêmio": "prémio", "prêmios": "prémios",
+    "acadêmico": "académico", "acadêmica": "académica",
+    "acadêmicos": "académicos", "acadêmicas": "académicas",
+    # ê → é
+    "gênero": "género", "gêneros": "géneros",
+    # PT-PT drops the circumflex entirely on these
+    "vôo": "voo", "vôos": "voos",
+    "metrô": "metro",
 }
 # Case-insensitive whole-word replacement, preserving the original capitalization.
 _PTBR_RE = re.compile(r"\b(" + "|".join(re.escape(k) for k in _PTBR_FIXES) + r")\b", re.IGNORECASE)
