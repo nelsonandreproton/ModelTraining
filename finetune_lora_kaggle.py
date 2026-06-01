@@ -1,5 +1,5 @@
 # Fine-tuning Qwen2.5-1.5B-Instruct with LoRA — Kaggle GPU version
-# Dataset: nelsondiasandre/portuguese-qa-instruct-620 (PT-PT only)
+# Dataset: nelsondiasandre/portuguese-qa-instruct-raw (PT-PT only, 5000+ pairs)
 # Upgrades vs local version: r=16, bf16=True, early stopping, GPU
 
 import os
@@ -16,7 +16,7 @@ os.environ["HF_TOKEN"] = hf_token
 
 # ── Config ────────────────────────────────────────────────────────────────────
 MODEL_NAME      = "Qwen/Qwen2.5-1.5B-Instruct"
-DATASET_NAME    = "nelsondiasandre/portuguese-qa-instruct-620"
+DATASET_NAME    = "nelsondiasandre/portuguese-qa-instruct-raw"
 HF_REPO_ID      = "nelsondiasandre/qwen25-1.5b-pt-qa-lora"
 OUTPUT_DIR      = "/kaggle/working/lora_output"
 FINAL_MODEL_DIR = "/kaggle/working/my_lora_model"
@@ -62,7 +62,7 @@ model.print_trainable_parameters()
 # ── Training config ───────────────────────────────────────────────────────────
 sft_config = SFTConfig(
     output_dir=OUTPUT_DIR,
-    num_train_epochs=20,
+    num_train_epochs=5,              # 5005 examples × 5 ≈ 3000 steps; was 20 (set for ~500 examples — overkill + overfit risk at 10× data). Early stopping still guards.
     per_device_train_batch_size=4,   # larger batch on GPU
     per_device_eval_batch_size=4,
     gradient_accumulation_steps=2,
