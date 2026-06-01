@@ -22,3 +22,11 @@ model_output/
 # Generated dataset artifacts (review before merging into create_dataset.py)
 generated_pairs*.json
 merged_raw_preview.json
+
+# Eval run artifacts
+eval_run.log
+eval_generations.json
+my_lora_model_500_backup/
+
+# Claude Code local config
+.claude/

@@ -2,6 +2,22 @@
 # Dataset: nelsondiasandre/portuguese-qa-instruct-raw (PT-PT only, 5000+ pairs)
 # Upgrades vs local version: r=16, bf16=True, early stopping, GPU
 
+# ── Pin to a SINGLE T4 — MUST be the very first thing the process does ─────────
+# CUDA_VISIBLE_DEVICES only takes effect if set BEFORE the first CUDA call. Any
+# import (torch/accelerate) or probe (torch.cuda.mem_get_info) initializes the
+# CUDA context with whatever GPUs are visible at that moment — after that, this
+# env var is a no-op. Setting it earlier (line ~34) let CUDA init on both T4s,
+# so the Trainer used DataParallel and OOMed at backward() on "GPU 1". These two
+# lines must stay at the absolute top, above all imports and any GPU probe.
+import os
+os.environ["CUDA_VISIBLE_DEVICES"]  = "0"   # single T4 — DataParallel on 2×T4 OOMs
+os.environ["PYTORCH_ALLOC_CONF"]    = "expandable_segments:True"
+
+import torch
+print("visible GPUs:", torch.cuda.device_count(), flush=True)  # MUST print 1
+_free, _total = torch.cuda.mem_get_info()
+print(f"GPU free: {_free/1e9:.2f} / {_total/1e9:.2f} GB", flush=True)
+
 # ── Install a COHESIVE training stack (Kaggle ships an incompatible mix) ──────
 # Do NOT use `-U` here: upgrading each package independently produced a half-
 # upgraded transformers missing `divide_to_patches`, which trl's import chain
@@ -18,8 +34,6 @@ subprocess.run([sys.executable, "-m", "pip", "install", "-q",
                 "datasets==3.1.0"], check=True)
 print("deps installed — if you see an import error below, do Run > Restart & Run All once", flush=True)
 
-import os
-import torch
 from datasets import load_dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer, EarlyStoppingCallback
 from peft import LoraConfig, get_peft_model, TaskType
@@ -27,12 +41,11 @@ from trl import SFTConfig, SFTTrainer
 
 # ── HuggingFace token from Kaggle secret ─────────────────────────────────────
 # Add via: Kaggle notebook → Add-ons → Secrets → name: HF_TOKEN
+# (os, torch, CUDA_VISIBLE_DEVICES and PYTORCH_ALLOC_CONF are set at the top of
+#  the file — they MUST run before any CUDA init, so they cannot live here.)
 from kaggle_secrets import UserSecretsClient
 hf_token = UserSecretsClient().get_secret("HF_TOKEN")
 os.environ["HF_TOKEN"] = hf_token
-os.environ["PYTORCH_ALLOC_CONF"] = "expandable_segments:True"
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"  # single T4 — DataParallel on 2×T4 duplicates
-                                           # model+grads on GPU0, causing OOM at backward pass
 
 # ── Config ────────────────────────────────────────────────────────────────────
 MODEL_NAME      = "Qwen/Qwen2.5-1.5B-Instruct"

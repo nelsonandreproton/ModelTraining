@@ -1,6 +1,6 @@
 ========================================================================
 AVALIAÇÃO COMPARATIVA v2 — Qwen2.5-1.5B Base vs LoRA Fine-tunado
-Data: 2026-05-25 23:07
+Data: 2026-06-01 16:45
 ────────────────────────────────────────────────────────────────────────
 Melhorias v2:
   • Conjunto de teste ISOLADO (25 perguntas nunca vistas em treino)
@@ -11,7 +11,7 @@ Melhorias v2:
 ========================================================================
 
 A carregar dataset...
-Conjunto de validação (contaminado): 100 exemplos
+Conjunto de validação (contaminado): 1001 exemplos
 Conjunto de teste isolado: 25 exemplos
 
 A carregar tokenizer e modelos (pode demorar)...
@@ -22,15 +22,15 @@ A carregar tokenizer e modelos (pode demorar)...
 CAMADA 1 — Perplexidade
 ────────────────────────────────────────────────────────────────────────
 
-  1a. Conjunto de VALIDAÇÃO (100 exemplos) — contaminado por treino
+  1a. Conjunto de VALIDAÇÃO (amostra 25 de 1001) — contaminado por treino
   A calcular Base...
   A calcular LoRA...
 
   Modelo                             Loss   Perplexidade
   ------------------------------------------------------
-  Qwen2.5-1.5B Base                2.5457          12.75
-  Qwen2.5-1.5B + LoRA              1.0393           2.83
-  Δ (Base − LoRA): +9.93  [⚠ baixa fiabilidade — split usado em treino]
+  Qwen2.5-1.5B Base                1.9973           7.37
+  Qwen2.5-1.5B + LoRA              1.2006           3.32
+  Δ (Base − LoRA): +4.05  [⚠ baixa fiabilidade — split usado em treino]
 
   1b. Conjunto ISOLADO (25 exemplos) — nunca visto em treino
   A calcular Base...
@@ -39,8 +39,8 @@ CAMADA 1 — Perplexidade
   Modelo                             Loss   Perplexidade
   ------------------------------------------------------
   Qwen2.5-1.5B Base                2.5812          13.21
-  Qwen2.5-1.5B + LoRA              1.2591           3.52
-  Δ (Base − LoRA): +9.69  [✓ fiável — conjunto isolado]
+  Qwen2.5-1.5B + LoRA              1.9695           7.17
+  Δ (Base − LoRA): +6.05  [✓ fiável — conjunto isolado]
 
 ────────────────────────────────────────────────────────────────────────
 CAMADA 2 — Geração de respostas
@@ -57,17 +57,19 @@ CAMADA 3 — Contaminação PT-BR
 ────────────────────────────────────────────────────────────────────────
 
   Validação (verbose):
-    Base — 56 ocorrências PT-BR | LoRA — 2 ocorrências PT-BR
-    Base top-5: alguns pontos=14, pontos importantes=11, aqui estão=8, você=3, no entanto,=3
-    LoRA top-5: planilha=1, realizado=1
+    Base — 28 ocorrências PT-BR | LoRA — 18 ocorrências PT-BR
+    Base top-5: alguns pontos=5, pontos importantes=5, no entanto,=4, aqui estão=4, você=2
+    LoRA top-5: no entanto,=11, ônibus=2, também é=2, através de=2, também são=1
 
   Isolado (verbose):
-    Base — 49 ocorrências PT-BR | LoRA — 0 ocorrências PT-BR
+    Base — 49 ocorrências PT-BR | LoRA — 14 ocorrências PT-BR
     Base top-5: alguns pontos=15, pontos importantes=10, aqui estão=7, você=5, pontos-chave=5
+    LoRA top-5: no entanto,=10, através de=3, também é=1
 
   Isolado (conciso):
-    Base — 32 ocorrências PT-BR | LoRA — 0 ocorrências PT-BR
+    Base — 32 ocorrências PT-BR | LoRA — 3 ocorrências PT-BR
     Base top-5: alguns pontos=12, pontos importantes=8, aqui estão=6, pontos-chave=4, você=1
+    LoRA top-5: no entanto,=2, também é=1
 
 ────────────────────────────────────────────────────────────────────────
 CAMADA 4 — ROUGE-L + BERTScore
@@ -78,24 +80,24 @@ CAMADA 4 — ROUGE-L + BERTScore
   Validação (verbose):
   Métrica                    Base       LoRA            Δ
   ------------------------------------------------------
-  ROUGE-L                  0.1985     0.3608      +0.1623
-  BERTScore F1             0.7182     0.8062      +0.0880
+  ROUGE-L                  0.1564     0.2026      +0.0462
+  BERTScore F1             0.6996     0.7319      +0.0323
 
   A calcular BERTScore [Isolado (verbose)]...
 
   Isolado (verbose):
   Métrica                    Base       LoRA            Δ
   ------------------------------------------------------
-  ROUGE-L                  0.1511     0.3006      +0.1495
-  BERTScore F1             0.6914     0.7806      +0.0893
+  ROUGE-L                  0.1511     0.1479      -0.0031
+  BERTScore F1             0.6914     0.7080      +0.0166
 
   A calcular BERTScore [Isolado (conciso)]...
 
   Isolado (conciso):
   Métrica                    Base       LoRA            Δ
   ------------------------------------------------------
-  ROUGE-L                  0.2188     0.3028      +0.0841
-  BERTScore F1             0.7276     0.7807      +0.0531
+  ROUGE-L                  0.2188     0.2309      +0.0121
+  BERTScore F1             0.7276     0.7528      +0.0253
 
 ────────────────────────────────────────────────────────────────────────
 CAMADA 5 — LLM-as-Judge (qwen2.5-7b-instruct) — prompt v2 corrigido
@@ -105,26 +107,26 @@ CAMADA 5 — LLM-as-Judge (qwen2.5-7b-instruct) — prompt v2 corrigido
 
   Dimensão               Base     LoRA        Δ  [score 1-5]
   ----------------------------------------------
-  correcção              2.88     3.04    +0.16
-  fluência               3.16     3.68    +0.52
-  completude             2.92     2.80    -0.12
+  correcção              3.00     3.60    +0.60
+  fluência               3.20     3.88    +0.68
+  completude             3.00     3.64    +0.64
 
   Veredito `melhor` (independente dos scores):
-    Base=10  LoRA=13  Empate=2  Erros=0
-    Base 40% | LoRA 52% | Empate 8%
+    Base=7  LoRA=17  Empate=1  Erros=0
+    Base 28% | LoRA 68% | Empate 4%
   [⚠ Nota: `melhor` pode diferir dos scores — reflecte qualidade global percepcionada]
 
   Judge — Isolado (conciso)
 
   Dimensão               Base     LoRA        Δ  [score 1-5]
   ----------------------------------------------
-  correcção              2.80     3.20    +0.40
-  fluência               2.56     3.68    +1.12
-  completude             2.68     3.08    +0.40
+  correcção              2.96     3.52    +0.56
+  fluência               3.00     3.76    +0.76
+  completude             2.92     3.36    +0.44
 
   Veredito `melhor` (independente dos scores):
-    Base=7  LoRA=16  Empate=2  Erros=0
-    Base 28% | LoRA 64% | Empate 8%
+    Base=7  LoRA=17  Empate=1  Erros=0
+    Base 28% | LoRA 68% | Empate 4%
   [⚠ Nota: `melhor` pode diferir dos scores — reflecte qualidade global percepcionada]
 
 ========================================================================
@@ -134,21 +136,21 @@ RESUMO FINAL
   Perplexidade:
   Conjunto                             Base     LoRA          Δ  Fiabilidade
   ----------------------------------------------------------------------
-  Validação (contaminado)             12.75     2.83      -9.93  ⚠ baixa
-  Isolado (nunca visto)               13.21     3.52      -9.69  ✓ alta
+  Validação (contaminado)              7.37     3.32      -4.05  ⚠ baixa
+  Isolado (nunca visto)               13.21     7.17      -6.05  ✓ alta
 
   ROUGE-L / BERTScore:
   Conjunto                         RL-Base   RL-LoRA      ΔRL    BS-Base   BS-LoRA      ΔBS
   --------------------------------------------------------------------------------------
-  Validação (verbose)               0.1985    0.3608  +0.1623     0.7182    0.8062  +0.0880
-  Isolado (verbose)                 0.1511    0.3006  +0.1495     0.6914    0.7806  +0.0893
-  Isolado (conciso)                 0.2188    0.3028  +0.0841     0.7276    0.7807  +0.0531
+  Validação (verbose)               0.1564    0.2026  +0.0462     0.6996    0.7319  +0.0323
+  Isolado (verbose)                 0.1511    0.1479  -0.0031     0.6914    0.7080  +0.0166
+  Isolado (conciso)                 0.2188    0.2309  +0.0121     0.7276    0.7528  +0.0253
 
   Judge (scores médios, 1-5):
   Conjunto                         corr-B   corr-L   flu-B   flu-L  comp-B  comp-L  Veredito
   ------------------------------------------------------------------------------------------
-  Isolado (verbose)                  2.88     3.04    3.16    3.68    2.92    2.80  LoRA 52%
-  Isolado (conciso)                  2.80     3.20    2.56    3.68    2.68    3.08  LoRA 64%
+  Isolado (verbose)                  3.00     3.60    3.20    3.88    3.00    3.64  LoRA 68%
+  Isolado (conciso)                  2.96     3.52    3.00    3.76    2.92    3.36  LoRA 68%
 
 ========================================================================
 RESPOSTAS LADO A LADO — Conjunto Isolado (verbose)
@@ -169,7 +171,7 @@ Alguns fatos importantes sobre Groenlândia:
 4. A temperatura média anual em Groenlândia é muito baixa, com temperaturas frias durante todo o ano.
 
 5. A ilha tem uma extensão territorial de cerca de 2,16 milhões de quilômetros quadrados (83
-  LoRA: O ponto mais ocidental da Europa Continental é a ilha de Groenlând, que fica no Oceano Atlântico Norte.
+  LoRA: O ponto mais ocidental da Europa Continental é a costa de Portugal, especificamente na ilha de Terceira no arquipélago das Ilhas Açores. Este ponto tem uma latitude máxima de 41º50'N e é conhecido como o 'Ponto do Oeste'. No entanto, é importante notar que esta região não está diretamente ligada à Europa Continental em termos geográficos, pois a Europa Continental se refere ao continente europeu inteiro, incluindo as regiões situadas além dos limites marítimos da Europa Continental. Portanto, o ponto mais ocidental da Europa Continental é sim um ponto específico na costa portuguesa, mas não representa toda a extensão geográfica da Europa Continental propriamente dita. Além disso, a Europa Continental também inclui territórios fora do mar, como a Grã-Bretanha e os Países Baixos, que
 
 [2] Qual é a região autónoma mais oriental de Portugal?
   Ref:  A região autónoma mais oriental de Portugal é os Açores, especialmente a ilha das Flores, no grupo ocidental.
@@ -188,7 +190,7 @@ Alguns pontos importantes sobre este distrito:
 5. Cultura: É conhecido por sua rica cultura insular, incluindo música tradicional madeirense e gastronomia típica.
 
 6. Patrimônio histórico: Conta com vários monumentos históricos e arquitetônicos, como cast
-  LoRA: A região autónoma mais oriental de Portugal é o distrito do Norte de Portugal, que abrange as ilhas de Madeira e Porto Santo.
+  LoRA: A região autónoma mais oriental de Portugal é o distrito de Setúbal, que abrange parte da costa atlântica do país. Este distrito inclui as cidades de Setúbal e Almada. A região autónoma mais ocidental é o distrito de Lisboa, que abrange grande parte da cidade de Lisboa e algumas áreas adjacentes. O distrito de Setúbal tem uma localização geográfica mais oriental em relação à capital portuguesa. É importante notar que esta classificação é baseada na estrutura administrativa das regiões autónomas de Portugal, não nas fronteiras geopolíticas entre países europeus. Portanto, a região autónoma mais oriental seria o distrito de Setúbal, enquanto a mais ocidental seria o distrito de Lisboa. No entanto, esta classificação pode variar dependendo da definição utilizada para categorizar
 
 [3] Quem foi D. Sebastião e o que foi o Sebastianismo?
   Ref:  D. Sebastião foi o rei de Portugal que desapareceu na Batalha de Alcácer Quibir em 1578. O Sebastianismo é a crença mítica no seu regresso para salvar Portugal numa hora de necessidade.
@@ -207,7 +209,7 @@ Alguns pontos importantes sobre o Sebastianismo:
 2. Foi influenciada por ideologias reformistas europeias, especialmente pela Reforma Protestante.
 
 3
-  LoRA: D. Sebastião (1532-1578) foi um rei português de génio militar, conhecido como 'o Conde de Guimarães', que conquistou Portugal do Norte à Serra da Estrela em 1568. O termo 'Sebastianismo' refere-se ao estilo artístico barroco português, caracterizado por cores vibrantes, linhas retas e formas geométricas, influenciado pelo seu reinado.
+  LoRA: D. Sebastião era o rei português de 1580 a 1582, quando morreu no Castelo de São Jorge em Lisboa durante a Batalha da Alcáçovas contra os espanhóis liderados por D. Afonso VI. O Sebastianismo refere-se à ideia de que D. Sebastião foi assassinado pelo seu próprio filho, D. João V, para poder continuar governando Portugal após sua morte. Este é um dos principais mitos históricos associados ao reinado do rei D. Sebastião. A verdadeira causa da sua morte permanece controversa até hoje. D. Sebastião é lembrado como um herói nacional por muitos portugueses. Sebastião é também conhecido pela sua obra-prima, o Teatro Nacional D. Manuel I, construído na Praça do Comércio em Lisboa. O teatro foi
 
 [4] O que foi o Marquês de Pombal conhecido por fazer após o terramoto de 1755?
   Ref:  O Marquês de Pombal coordenou a reconstrução de Lisboa após o terramoto de 1755, reformou o ensino com a expulsão dos jesuítas e modernizou a economia portuguesa.
@@ -220,7 +222,7 @@ Durante seu governo, ele implementou uma série de medidas importantes:
 1. Reconstrução: O objetivo principal era restaurar as infraestruturas danificadas pelo terremoto. Isso incluía a construção de novas estruturas resistentes à tempestade, além de reparos nas edificações existentes.
 
 2. Reforma
-  LoRA: O Marquês de Pombal é famoso por ter implementado uma reforma administrativa e social em Portugal após o terramoto de 1755, organizando a recuperação do país e estabelecendo um sistema de segurança pública moderno.
+  LoRA: O Marquês de Pombal é conhecido por ter implementado reformas urbanas e infraestruturas após o terramoto de 1755, incluindo a construção da Torre do Relógio em Lisboa. Essas medidas visavam a reconstrução urbana e a melhoria das condições sociais da cidade. Além disso, ele também promoveu a modernização económica e política do país. O seu trabalho contribuiu significativamente para a recuperação posterior de Lisboa. A sua intervenção durou vários anos e resultou em uma nova cidade mais forte e resiliente. Este evento marcou um ponto de viragem na história de Portugal, marcando o início de uma era de progresso e desenvolvimento. O Marquês de Pombal é lembrado como um dos principais figuras históricas do século XVIII português. O seu legado continua a ser valorizado até
 
 [5] O que é a teoria das cordas na física?
   Ref:  A teoria das cordas é uma teoria física que propõe que as partículas subatômicas são manifestações de minúsculas cordas de energia vibratória, tentando unificar a mecânica quântica com a relatividade geral.
@@ -233,7 +235,7 @@ Alguns pontos importantes sobre a Teoria das Cordas:
 2. Essa teoria tenta explicar como as partículas atômicas se movem e interagem entre si, usando a propriedade de curvatura das cordas.
 
 3. Se verdadeira, poderia resolver problemas atuais em física quântica, como o problema dos fundos
-  LoRA: A teoria das cordas é uma suposta nova dimensão da física quântica, onde as partículas são representadas como ondas de corda vibrando em curvas esféricas (cordas) ao invés de pontos ou vetores.
+  LoRA: A teoria das cordas na física é uma abordagem matemática para entender o universo, onde as partículas físicas são representadas como ondas de corda vibrando em um espaço multidimensional. Este conceito foi proposto por Edward Witten e outros físicos no final dos anos 80 e início dos anos 90. A ideia é que as partículas fundamentais, como os átomos e os leptons, são pontes entre diferentes dimensões do espaço, permitindo uma explicação mais simples da interconexão entre eles. Esta teoria tem sido objeto de discussão e debate científico até hoje. O termo 'teoria das cordas' vem devido à forma geométrica das equações envolvidas, que parecem ser similares às equações das cordas musicais. No entanto, esta teoria ainda não foi experimentada experimentalmente e continua sendo um campo de
 
 [6] O que é a computação quântica?
   Ref:  A computação quântica é um modelo de computação que usa fenómenos da mecânica quântica como superposição e entrelaçamento para processar informação de forma radicalmente mais eficiente em certos problemas.
@@ -246,7 +248,7 @@ Alguns pontos-chave sobre a Computação Quântica:
 2. Potencial: A capacidade de processar muitos dados simultaneamente torna a Computação Quântica extremamente potente para problemas complexos, especialmente na área da simulação quântica e cálculo combinatorial.
 
 3. Desafios: O hardware necessário ainda está sendo desenvolvido, e existem desafios técnicos signific
-  LoRA: A computação quântica é uma disciplina da informática que utiliza o comportamento dos sistemas quânticos para processar grandes conjuntos de dados em tempo real, com potencialidades inovadoras na criptografia e simulação de sistemas complexos.
+  LoRA: A computação quântica é uma nova forma de processamento de dados baseada em princípios da física quântica. Em vez de usar bits binários (0 ou 1) para representar informações, utiliza qubits, que podem ser simultaneamente 0 e 1 ao mesmo tempo. Esta capacidade permite eficiências inéditas na resolução de problemas complexos, especialmente nos campos da ciência e da tecnologia. A IBM Quantum, por exemplo, oferece plataformas de computação quântica para desenvolvedores de software. O Google também investiu significativamente nessa área, demonstrando seu interesse no campo. A Intel também está trabalhando em soluções de computação quântica. A computação quântica tem potencial para revolucionar várias indústrias, incluindo medicina, segurança cibernética e economia. No entanto, ainda enfrent
 
 [7] Qual é a diferença entre 'mau' e 'mal' em português?
   Ref:  'Mau' é um adjetivo que qualifica substantivos ('um mau resultado'), enquanto 'mal' é um advérbio que modifica verbos ou adjetivos ('correu mal', 'mal feito').
@@ -260,7 +262,7 @@ Em alguns casos, esses termos podem ter nuances diferentes:
 
 - "Mau" geralmente é usado para descrição geral.
 -
-  LoRA: 'Mau' é um adjetivo que significa 'pior', enquanto 'mal' pode ser uma palavra verbal (como 'maltratar') ou um adverbio (como 'mal').
+  LoRA: 'A mau' significa 'bad', enquanto 'mal' tem várias significações, incluindo 'badly' ou 'poorly'. Por exemplo: 'Ele está mau comigo' (He is bad with me) e 'Ele está mal comigo' (He is poorly with me). A diferença reside na intensidade da expressão. 'Mau' é mais geralmente usado para descrever uma situação geral, enquanto 'mal' pode ser usado para descrever uma situação específica ou piora. Além disso, 'malo' é um substantivo masculino, enquanto 'mal' é um adverbio neutro. Por exemplo: 'É o mala hora' (It's the worst time), onde 'mala' é um substantivo feminino, e 'mal' é um adverbio neutro. 'Mal' também pode ser usado como adjetivo para se referir a algo que não funciona bem, mas 'm
 
 [8] O que é o infinitivo pessoal em português?
   Ref:  O infinitivo pessoal é uma forma verbal exclusiva do português que conjuga o infinitivo com sujeito próprio: 'para eu falar', 'para tu falares', 'para eles falarem'.
@@ -280,7 +282,7 @@ No entanto, não há infinitivos pessoais no presente subjuntivo (como "se eu qu
    - Querer = Quisermos
 
 2. Futuro Sub
-  LoRA: Um infinitivo pessoal é um infinitivo no qual o sujeito (eu, tu, ele/ela) está explicitamente colocado após 'a' ou 'o'. Exemplos: 'A estudar', 'O comer'.
+  LoRA: O infinitivo pessoal em português refere-se ao infinitivo de um verbo usado para expressar uma ação ou estado semelhante a outra ação ou estado já mencionada anteriormente na frase. Por exemplo: 'Falar' pode ser usado como infinitivo pessoal quando se refere à capacidade de falar em diferentes contextos. Este tipo de infinitivo é particularmente útil para criar frases complexas e precisas. O infinitivo pessoal é uma estrutura gramatical importante no português moderno. É fundamental entender este conceito para compreender melhor as composições verbais do idioma. É uma ferramenta poderosa que permite a criação de frases mais elaboradas e precisas. É uma estrutura gramatical que requer atenção especial durante a formação da língua. É uma estrutura gramatical que requer atenção especial durante a formação da língua. É uma estrutura gramatical
 
 [9] O que é o Museu Nacional do Azulejo em Lisboa?
   Ref:  O Museu Nacional do Azulejo, instalado no Convento da Madre de Deus em Lisboa, é dedicado à arte do azulejo, com peças desde o século XV até à atualidade.
@@ -293,7 +295,7 @@ No entanto, não há infinitivos pessoais no presente subjuntivo (como "se eu qu
 3. Exposições: Oferece exposições temporárias que abordam temas relacionados com a cerâmica azul, como sua produção histórica, influências culturais, ou aspectos específicos das obras.
 
 4. Interpretação: O museu oferece informações educativas
-  LoRA: O Museu Nacional do Azulejo é um museu de arte decorativa português situado na Rua da Alfândega, 102, em Lisboa. Foi inaugurado em 1987 e expõe azulejos de Portugal desde o século XV ao XX, destacando-se por sua vastidão e qualidade técnica.
+  LoRA: O Museu Nacional do Azulejo em Lisboa é um importante centro de pesquisa e exposição sobre azulejos portugueses. Localizado no Parque das Nações, este museu abriga uma vasta coleção de azulejos antigos e modernos, oferecendo aos visitantes uma visão única da história e da arte decorativa portuguesas. O museu também promove a conservação e a divulgação destes objetos culturais. Este é um exemplo de como o património cultural pode ser preservado e valorizado através de instituições dedicadas à sua proteção. Além disso, o museu contribui para a educação e a sensibilização sobre a importância dos azulejos na cultura portuguesa. Onde fica: Parque das Nações, 1049-023 Lisboa, Portugal. Como chegar: Acesso fácil por metro ou combo
 
 [10] Quem foi Sophia de Mello Breyner Andresen?
   Ref:  Sophia de Mello Breyner Andresen foi uma das maiores poetisas portuguesas do século XX, vencedora do Prémio Camões em 1999, conhecida pela clareza da linguagem e pelos temas da luz e do mar.
@@ -310,7 +312,7 @@ Alguns pontos importantes sobre Sophia de Mello Breyner Andresen:
 4. A obra mais famosa dela é o "Museum of Modern Art" (MoMA), que retrata a forma do prédio da MoMA como um esboço de um cubo.
 
 5. Ela também produz esculturas e desenh
-  LoRA: Sophia de Mello Breyner Andresen é uma designer portuguesa que criou o famoso edifício 'O Pincel' em Lisboa, Portugal, inspirado no pincel da pintora Renata Ferreira.
+  LoRA: Sophia de Mello Breyner Andresen é uma artista portuguesa que viveu entre 1923 e 2018. Ela é conhecida por suas obras de arte abstractas e surrealistas, muitas vezes inspiradas em fenômenos naturais ou históricos. Sua obra mais famosa é o 'Cristo Redentor', um monumento na cidade do Rio de Janeiro, Brasil, que ela criou em 1964. Devido à sua contribuição significativa para a arte contemporânea portuguesa, Sophia de Mello Breyner Andresen recebeu diversos prémios e honrarias ao longo da sua vida. A sua obra também tem sido exposta em museus internacionais como o MoMA em Nova York. O seu legado continua a ser estudado e valorizado pela comunidade artística internacional. A sua vida e obra são frequentemente
 
 [11] O que é o arroz de sarrabulho?
   Ref:  O arroz de sarrabulho é um prato típico do Minho, feito com arroz cozido em sangue de porco e carnes variadas, muito presente nos arraiais populares.
@@ -323,7 +325,7 @@ Se você está se referindo a algum tipo de alimento ou produto alimentício, ta
 3. Se você está usando esse termo de forma genérica, talvez precise de mais contexto para entender exatamente o que está perguntando.
 
 Por favor, forneça mais detalhes ou contexto para que eu possa te auxiliar da maneira mais precisa possível.
-  LoRA: O arroz de sarrabulho é uma receita portuguesa tradicional feita com arroz e carne moída, servida em panelas grandes ou caldeirões.
+  LoRA: O arroz de sarrabulho é uma receita típica do sul da Península Ibérica, especialmente associada à região de Alentejo. Este prato é feito com arroz cozido e servido com carne moída ou peixe grelhado, geralmente acompanhado por legumes como espinafre assado. A receita é conhecida pela sua textura cremosa e pelo seu sabor único, caracterizado por ingredientes regionais como o pimentão vermelho e o alho. O arroz de sarrabulho é um prato tradicional que reflete a culinária regional portuguesa. É importante notar que esta receita pode variar ligeiramente dependendo da região e da localização geográfica. No entanto, todos os tipos de arroz de sarrabulho compartilham as mesmas características básicas: arroz cozido,
 
 [12] O que é a cataplana?
   Ref:  A cataplana é tanto um utensílio de cozinha típico do Algarve (em cobre com fecho hermético) como o prato confeccionado nele, geralmente com peixe, mariscos, legumes e especiarias.
@@ -338,7 +340,7 @@ Por favor, forneça mais detalhes ou contexto para que eu possa te auxiliar da m
 4. Música: Geralmente é tocada para danças ritmadas e outras formas de música tradicional indiana.
 
 5. Composição: As mús
-  LoRA: A cataplana é uma espécie de peixe marinho da família dos pescadores, com corpo redondo e cabeça grande, encontrado principalmente em águas tropicais do Pacífico e Atlântico.
+  LoRA: A cataplana é uma espécie de prato tradicional português, especialmente associada à culinária do Algarve. É feito com pano de chumbo ou metal e pode ser usado para cozinhar alimentos como peixes assados ou arroz cozido. A sua origem remonta ao século XVII, quando foi introduzida pelo rei D. João IV. O seu uso tem aumentado nos últimos anos, tornando-se um símbolo da gastronomia regional. A cataplana é conhecida por suas formas variadas e cores, sendo frequentemente usada em festas regionais e eventos culturais. Além disso, é também utilizada na preparação de outros tipos de pratos, como o bacalhau à alentejana. A sua produção é uma atividade importante no setor alimentar do Algarve, contribuindo para a economia local. A catapl
 
 [13] O que é o fine-tuning de um modelo de linguagem?
   Ref:  O fine-tuning é o processo de continuar o treino de um modelo pré-treinado com dados específicos de um domínio, adaptando-o a uma tarefa particular sem treinar do zero.
@@ -356,7 +358,7 @@ Por favor, forneça mais detalhes ou contexto para que eu possa te auxiliar da m
 
 4. Benefícios principais:
    - Melhora significativamente as habilidades do modelo em tarefas
-  LoRA: Fine-tuning é uma técnica em aprendizado de máquina onde um modelo pré-treinado (como BERT) é ajustado para resolver um problema específico usando dados específicos do seu domínio.
+  LoRA: O fine-tuning de um modelo de linguagem refere-se à tarefa de ajustar os parâmetros do modelo para melhorar sua capacidade em uma nova tarefa específica, geralmente associada a processos de tradução ou compreensão natural. Este processo envolve treinar o modelo com dados específicos e finais, permitindo que ele aprenda novas habilidades e funcione mais eficientemente em situações reais. O fine-tuning é crucial para maximizar a precisão e a eficiência dos modelos de IA na prática. É uma técnica fundamental no desenvolvimento de sistemas de IA avançados. Afinal, o fine-tuning é como adaptar um instrumento para atender às necessidades específicas de cada projeto, garantindo que ele seja mais útil e eficiente. Isso reflete a natureza dinâmica e adaptativa das tecnologias de IA, onde cada aplicação requer ajustes personalizados
 
 [14] O que é o RAG (Retrieval-Augmented Generation)?
   Ref:  RAG é uma técnica de IA que combina geração de linguagem com recuperação de documentos: o modelo pesquisa informação relevante numa base de conhecimento antes de gerar a resposta, reduzindo alucinações.
@@ -374,7 +376,7 @@ A principal vantagem do RAG é sua capacidade de fornecer respostas mais precisa
 Alguns pontos importantes sobre RAG:
 
 - É especialmente
-  LoRA: O Retrieval-Augmented Generation (RAG) é uma técnica de IA que combina um modelo de geração com um banco de dados para gerar respostas mais precisas e relevantes. O modelo de geração usa os resultados da pesquisa como base para produzir uma resposta mais precisa.
+  LoRA: O RAG é um sistema de IA que combina uma base de dados de texto com uma rede neural para gerar respostas mais precisas e relevantes. Este método usa a informação presente na base de dados para orientar a geração de respostas, tornando-o útil em contextos onde a precisão dos resultados é crucial. O RAG é frequentemente usado em sistemas de busca e assistência virtual. É importante notar que este conceito foi introduzido pela Google em 2018, mas já existem outras implementações similares no mercado. A sua aplicação tem aumentado significativamente nos últimos anos, especialmente com a popularização das redes neurais e da IA geral. O RAG pode ser visto como uma evolução do modelo tradicional de IA, onde a inteligência artificial é usada para melhorar ainda mais as respostas fornecidas por sistemas de busca ou assistência virtual. O RAG é uma
 
 [15] Quais são os poderes do Primeiro-Ministro em Portugal?
   Ref:  O Primeiro-Ministro em Portugal dirige o Governo, coordena e orienta a ação dos ministros, representa o poder executivo e responde politicamente perante a Assembleia da República.
@@ -395,7 +397,7 @@ Alguns pontos importantes sobre RAG:
 7. Representação política: Representa o país nas conferências internacionais e nos organismos internacionais.
 
 8. Responsabil
-  LoRA: O Primeiro-Ministro de Portugal é o líder da coalizão governamental e tem poderes como nomear ministros, aprovar leis, convocar as assembleias legislativas e tomar decisões sobre questões de Estado.
+  LoRA: O Primeiro-Ministro em Portugal tem o poder de formar e demitir ministros, liderar as negociações internacionais e representar o país na Assembleia da República. No entanto, essas funções estão sujeitas à validação do Presidente da República. O Primeiro-Ministro também é responsável por organizar e conduzir as políticas públicas. É um cargo muito importante que exige competências administrativas e diplomáticas. A sua função principal é garantir que as políticas estabelecidas pelo governo sejam implementadas eficazmente. Além disso, o Primeiro-Ministro deve estar alinhado com as diretrizes do Presidente da República para garantir uma gestão eficiente do país. Este cargo requer habilidades de liderança, diplomacia e capacidade de tomada de decisões. O Primeiro-Ministro é um dos principais responsáveis pela administra
 
 [16] O que é o Tribunal Constitucional em Portugal?
   Ref:  O Tribunal Constitucional é o órgão jurisdicional português com competência específica para apreciar a inconstitucionalidade de normas e para fiscalizar a constitucionalidade de leis.
@@ -408,7 +410,7 @@ Alguns pontos importantes sobre RAG:
 3. Processo de análise: Os processos envolvendo o TCU têm um procedimento especial, incluindo audiências públicas para discutir as questões.
 
 4. Decisões: As decisões do TCU são fundamentais para garantir a aplicação da Constituição e podem influenciar significativamente a legislação portuguesa.
-  LoRA: O Tribunal Constitucional (TC) é um tribunal especial do Estado Português, criado em 1986, responsável por analisar questões constitucionais e garantir a aplicação da Constituição de 25 de Abril.
+  LoRA: O Tribunal Constitucional em Portugal é um tribunal judicial responsável por analisar e julgar as normas constitucionais da República Portuguesa. Ele tem como objetivo garantir a aplicação da lei e verificar se as leis são compatíveis com a Constituição do país. Este tribunal é fundamental para a manutenção da ordem jurídica e dos princípios democráticos. É composto por magistrados eleitos pelo parlamento e funciona na Corte de Contas do Estado. O seu papel é essencial para a protecção das liberdades individuais e dos direitos fundamentais. É uma instituição importante no sistema legal português. É importante notar que este tribunal foi criado após a Revolução dos Cravos em 1974, quando Portugal passou a ser um estado democrático. A sua existência reflete a transição para a democracia após a ditadura militar. O Tribunal
 
 [17] O que é o AVC (Acidente Vascular Cerebral)?
   Ref:  O AVC é uma interrupção súbita do fluxo sanguíneo ao cérebro, por obstrução (isquémico) ou rotura de vaso (hemorrágico), podendo causar paralisia, afasia e outros défices neurológicos.
@@ -428,7 +430,7 @@ Alguns pontos importantes sobre RAG:
    - Atenção excessiva à pressão alta
 
 4. Sintomas: Pode vari
-  LoRA: Um Acidente Vascular Cerebral (AVC) é um evento cerebral grave em que uma parte do cérebro recebe menos oxigénio e nutrição, causando lesões cerebrais permanentes ou temporáneas.
+  LoRA: O AVC é um acidente vascular cerebral, uma condição médica em que um dos vasos do cérebro se obstrui ou se rompe, causando derramamento de sangue no cérebro e consequente lesão neural. É uma emergência médica grave que requer imediatas intervenções para salvar vidas e melhorar as chances de recuperação. O AVC pode ser provocado por condições como pressão alta, diabetes, colesterol elevado e tabagismo. A detecção precoce e tratamento adequados são cruciais para minimizar os danos. O AVC é uma das principais causas de morte prematura em Portugal. O diagnóstico é feito através da avaliação clínica, exames físicos e testes neurologistas. O tratamento inclui medicamentos, cirurgia e terapias rehabilitadoras. O AVC tem um impacto significativo na qualidade de vida dos pacientes e
 
 [18] O que é a vacinação e como funciona a imunidade de grupo?
   Ref:  A vacinação estimula o sistema imunitário a produzir anticorpos sem causar doença. A imunidade de grupo ocorre quando uma percentagem elevada da população está imune, protegendo também os não vacinados.
@@ -437,7 +439,7 @@ Alguns pontos importantes sobre RAG:
 Quando estamos infectados por uma doença, nossos próprios glóbulos brancos (que são células do sistema imune) produzem anticorpos específicos para combater a infecção. Isso ajuda a proteger nossa saúde contra futuras infecções com a mesma bactéria ou vírus.
 
 A imunidade de grupo ocorre quando toda a população de um país ou região desenvolve essa capacidade natural de produzir anticorpos contra determinadas doenças. Isso significa que todos os membros da comunidade estão preparados para
-  LoRA: A vacinação é uma estratégia para prevenir doenças através da introdução de um agente inofensivo (vacinante) em pessoas saudáveis, estimulando o sistema imunitário a produzir anticorpos contra a doença. A imunidade de grupo ocorre quando uma grande parte da população se vacina, reduzindo a transmissão do vírus entre indivíduos, mesmo sem ter sido vacinada pessoalmente.
+  LoRA: A vacinação refere-se à administração de uma dose ou mais de um dos componentes da vacina para prevenir doenças. A imunidade de grupo ocorre quando uma grande parte da população se vacina contra uma doença, reduzindo significativamente o risco de contágio e consequente morte ou complicações. Esta imunidade ajuda a proteger toda a sociedade, não apenas aqueles que foram vacinados. O sucesso desta estratégia depende do número adequado de pessoas vacinadas em cada região. A vacinação é fundamental para a saúde pública e pode ser implementada através de programas governamentais e iniciativas privadas. A imunidade de grupo é crucial para manter as populações saudáveis e minimizar os impactos das doenças. A vacinação é essencial para garantir a segurança pública e combater epidemias. A imunidade de grupo é um me
 
 [19] O que é o Campeonato do Mundo de Futebol e quando o Portugal ganhou?
   Ref:  O Campeonato do Mundo de Futebol é a competição máxima de seleções nacionais, organizado pela FIFA de quatro em quatro anos. Portugal nunca ganhou o Mundial, mas foi terceiro em 1966 com Eusébio.
@@ -452,7 +454,7 @@ Aqui estão algumas informações importantes sobre o Campeonato Mundial:
 3. O país que mais vezes conquistou o título mundial é Brasil, com cinco títulos (1958, 1962, 1970, 1994 e 2002).
 
 4. O último time port
-  LoRA: O Campeonato Mundial de Futebol é um torneio internacional organizado pela FIFA (Federação Internacional de Futebol) com seleções nacionais de todo o mundo. O último campeão português foi Cristiano Ronaldo em 2016, vencendo a Eurocopa na Alemanha.
+  LoRA: O Campeonato do Mundo de Futebol refere-se ao torneio internacional mais importante da modalidade, onde os melhores jogadores e seleções competem por vaga na final. Portugal ganhou este torneio pela primeira vez em 1960, no qual derrotou a Itália em partida única. Este foi um marco significativo para a seleção portuguesa. No entanto, Portugal não conseguiu repetir esta vitória até 2018, quando novamente venceu a final contra a França. O campeonato tem sido disputado desde 1930, com Portugal sendo um dos participantes desde então. A seleção portuguesa tem tido uma história variada neste torneio, tendo conquistado várias medalhas de ouro e bronze ao longo dos anos. O sucesso recente vem acompanhando uma série de mudanças na estrutura técnica e organiz
 
 [20] Quem é Rosa Mota?
   Ref:  Rosa Mota é uma maratonista portuguesa, tricampeã europeia e campeã olímpica nos Jogos de Seul em 1988, considerada uma das melhores maratonistas da história.
@@ -465,7 +467,7 @@ Alguns pontos importantes sobre Rosa Mota:
 3. Seu estilo musical combina elementos do samba, bossa nova, MPB e outras influências culturais brasileiras.
 4. É considerada uma das maiores vozes do samba no Brasil.
 5. Tem participado de diversos programas de televisão e apresentações ao
-  LoRA: Rosa Mota é uma cantora portuguesa de jazz e soul, nascida em 1970, conhecida por "A Rainha das Banda", com sucessos como 'Onde está o meu amor' e 'Saudade'.
+  LoRA: Rosa Mota é uma cantora portuguesa que ganhou o prémio Eurovision 2016 com a canção 'Aqui está'. Ela é conhecida por sua voz e interpretações emocionais. Além disso, Rosa Mota também participou em programas de televisão como 'O Rei da Banda' e 'Os Amigos do Mundo'. Sua carreira musical inclui vários álbuns e premiações. É considerada uma das figuras mais importantes da música pop portuguesa. Ainda assim, não posso garantir que ela seja a primeira mulher a ganhar o prémio Eurovision, pois existem registros anteriores. No entanto, Rosa Mota foi a primeira mulher a ganhar o prémio Eurovision desde 1985. Portanto, seu feito é significativo para a história da música portuguesa. A informação precisa pode ser encontr
 
 [21] O que é a Convenção de Ramsar?
   Ref:  A Convenção de Ramsar é um tratado internacional de 1971 para a conservação e uso sustentável das zonas húmidas, especialmente como habitat de aves aquáticas.
@@ -480,7 +482,7 @@ Alguns pontos importantes sobre Rosa Mota:
 4. Regime: O tratado define critérios para identificar e classificar ecossistemas únicos como "ecossistemas de importancia comunitária".
 
 5. Ações: As partes devem promover a conservação desses ecossistemas, incluindo sua gestão
-  LoRA: A Convenção sobre o Meio Ambiente e os Recursos Hídricos (Ramsar Convention) foi criada em 1971 para proteger áreas de água terrestre e marinha importantes. Portugal assinou a convenção em 2004.
+  LoRA: A Convenção sobre o Meio Ambiente e os Recursos Hídricos (CMAHRH) foi estabelecida em 1971 para proteger os ecossistemas únicos do mundo. A Convenção de Ramsar refere-se à convenção que estabeleceu um sistema global para monitorizar e proteger os ecossistemas húmicos. Esta convenção tem como objetivo principal a conservação dos ecossistemas únicos e a preservação da biodiversidade. Portugal assinou esta convenção em 1980 e participa activamente nas suas iniciativas. O país possui vários reservatórios naturais declarados como áreas protegidas através desta convenção. A Convenção de Ramsar é uma das principais ferramentas utilizadas pela União Europeia para proteger o meio ambiente. Portanto, a Convenção de Ramsar é um instrumento importante na
 
 [22] O que é o teorema de Bayes?
   Ref:  O teorema de Bayes é uma fórmula da teoria da probabilidade que descreve como atualizar a probabilidade de uma hipótese com base em nova evidência, fundamental em estatística e inteligência artificial.
@@ -497,7 +499,7 @@ Aqui está uma explicação mais detalhada:
    
 3. Interpretação:
    - \(P(A)\) é a probabilidade geral de A ocorrer
-  LoRA: O Teorema de Bayes (ou Teorema da Probabilidade Condicionada) é uma regra matemática que permite calcular as probabilidades condicionadas em situações onde não se tem informação suficiente para fazer uma conclusão direta.
+  LoRA: O teorema de Bayes é um conceito fundamental da probabilidade e estatística que permite calcular as probabilidades condicionais em situações onde não há dados suficientes para fazer uma conclusão direta. Este teorema é crucial na medicina, economia e outras áreas científicas onde precisamos inferir informações baseadas em evidências limitadas. O teorema de Bayes foi formulado por Thomas Bayes no século XVIII e é essencialmente usado para ajustar modelos probabilísticos com novas observações. É importante notar que este teorema é aplicável tanto em contextos matemáticos quanto em aplicações práticas. A sua importância reside na capacidade de estimar probabilidades quando existem apenas dados incompletos ou incertos. O teorema de Bayes é uma ferramenta poderosa que permite melhorias significativas nas predições e análises. No entanto, é
 
 [23] O que é 'O Livro do Desassossego' de Bernardo Soares?
   Ref:  'O Livro do Desassossego' é uma obra de Fernando Pessoa escrita sob o semi-heterónimo Bernardo Soares, um diário fragmentário de meditações sobre a vida, a identidade e a escrita.
@@ -514,7 +516,7 @@ Alguns pontos-chave sobre "O Livro do Desassossego":
 4. A autora explora questões éticas, filosóficas e políticas através de suas experiências pessoais.
 
 5. O livro aborda temas controversos da
-  LoRA: 'O Livro do Desassossego' é um poema épico português escrito por Bernardo Soares em 1569, considerado o primeiro romance português e uma obra fundamental da literatura portuguesa medieval.
+  LoRA: 'O Livro do Desassossego' é um romance de Bernardo Soares publicado em 1937. Este livro retrata a vida cotidiana de uma família portuguesa durante o período da Segunda República, explorando temas como a luta pela independência e a busca por liberdade. O livro foi considerado um dos primeiros romances nacionais escritos em português. É conhecido por sua linguagem natural e pela descrição detalhada das situações sociais e familiares. A obra tem sido amplamente estudada e valorizada pelo seu papel na literatura nacional. O livro também influenciou significativamente a literatura portuguesa e teve um impacto profundo no movimento literário modernista. O livro foi posteriormente adaptado para cinema e teatro, contribuindo para a popularização do autor e do romance português. O livro é hoje consider
 
 [24] O que é o utilitarismo?
   Ref:  O utilitarismo é uma teoria ética que defende que a ação moralmente correta é aquela que maximiza a felicidade ou bem-estar total — 'o maior bem para o maior número', associada a Bentham e Mill.
@@ -527,7 +529,7 @@ Alguns pontos-chave sobre o utilitarismo:
 1. Ética metafísica: A filosofia do utilitarismo é uma subárea da ética metafísica, que busca entender o conceito de bem-estar e sua relação com a moralidade.
 
 2. Maximização do bem: O utilitarismo argumenta que a melhor forma de alcançar o bem-estar geral é através da maximização
-  LoRA: O utilitarismo é uma filosofia moral que defende que as ações são éticas se resultam em maior bem-estar geral. O autor mais famoso foi Jeremy Bentham, que propôs a 'máquina de utilidade'.
+  LoRA: O utilitarismo é uma filosofia ética que estabelece como objetivo principal maximizar o bem-estar geral de um grupo ou sociedade. Este princípio é baseado na ideia de que as ações devem ser avaliadas em termos do resultado mais positivo para todos os membros da comunidade. O utilitarismo foi proposto por Jeremy Bentham e é frequentemente usado em políticas públicas e economias sociais. No entanto, este conceito tem sido criticado por causa das limitações éticas e morais associadas ao seu aplicativo. É importante lembrar que cada caso deve ser analisado individualmente, considerando todas as circunstâncias específicas. O utilitarismo é apenas uma abordagem ética entre muitas outras possíveis. É importante respeitar diferentes visões éticas enquanto se trabalha para melhorar a qualidade de vida dos indivíduos e da
 
 [25] O que significa a expressão portuguesa 'à balda'?
   Ref:  'À balda' é uma expressão informal portuguesa que significa sem esforço, de forma descuidada ou sem trabalhar, equivalente a 'ao molho e fé'.
@@ -550,7 +552,7 @@ Alguns pontos-chave sobre o utilitarismo:
 
 5. Diferença com outras expressões similares:
    - "Às agu
-  LoRA: A expressão 'à balda' é uma expressão portuguesa que significa 'de repente', 'em seguida' ou 'imediatamente'.
+  LoRA: A expressão 'à balda' é uma expressão portuguesa que significa 'de repente', 'sobressaltado'. É usada para descrever alguém que se surpreende ou fica espantado de repente. Por exemplo: 'Ele foi à balda ao ver o carro novo.' Esta expressão é frequentemente utilizada em contextos onde há um choque visual ou emocional. A palavra 'balda' vem do latim 'baldus', que significa 'esperto' ou 'cara nova'. Portanto, 'à balda' pode ser traduzida como 'com cara nova' ou 'em estado de espanto'. Este termo reflete a natureza rápida e imprevista da sua origem. O uso desta expressão é comum em escritas literárias e diálogos cotidianos. A expressão é considerada informal e pode variar entre diferentes regiões de Portugal
 
 ========================================================================
 RESPOSTAS LADO A LADO — Conjunto Isolado (conciso)
@@ -565,7 +567,7 @@ Alguns fatos importantes sobre Groenlândia:
 1. É uma ilha na costa norte do continente europeu, separada do continente por um estreito chamado Barents Sea.
 
 2.
-  LoRA: O ponto mais ocidental da Europa Continental é a ilha de Groenlând, que fica no Oceano Atlântico Norte.
+  LoRA: O ponto mais ocidental da Europa Continental é a costa de Portugal, especificamente na ilha de Terceira no arquipélago das Ilhas Açores. Este ponto tem uma latitude máxima de 41º50'N e é conhecido como o 'Ponto do Oeste'. No entanto, é importante notar que esta região não está diretamente ligada à
 
 [2] Qual é a região autónoma mais oriental de Portugal?
   Ref:  A região autónoma mais oriental de Portugal é os Açores, especialmente a ilha das Flores, no grupo ocidental.
@@ -578,28 +580,28 @@ Alguns pontos importantes sobre este distrito:
 2. População: Tem uma população estimada de cerca de 300 mil habitantes.
 
 3. Capital
-  LoRA: A região autónoma mais oriental de Portugal é o distrito do Norte de Portugal, que abrange as ilhas de Madeira e Porto Santo.
+  LoRA: A região autónoma mais oriental de Portugal é o distrito de Setúbal, que abrange parte da costa atlântica do país. Este distrito inclui as cidades de Setúbal e Almada. A região autónoma mais ocidental é o distrito de Lisboa, que abrange grande parte da cidade de Lisboa e algumas áreas adjacentes
 
 [3] Quem foi D. Sebastião e o que foi o Sebastianismo?
   Ref:  D. Sebastião foi o rei de Portugal que desapareceu na Batalha de Alcácer Quibir em 1578. O Sebastianismo é a crença mítica no seu regresso para salvar Portugal numa hora de necessidade.
   Base: D. Sebastião (1532-1578) foi um importante líder militar português do século XVI. Ele liderou várias invasões ao Brasil, conquistando grandes territórios para Portugal.
 
 O termo "Sebastianismo" refere-se à ideologia política e social que se desenvolveu no Brasil durante o reinado de D. Sebastião
-  LoRA: D. Sebastião (1532-1578) foi um rei português de génio militar, conhecido como 'o Conde de Guimarães', que conquistou Portugal do Norte à Serra da Estrela em 1568. O termo 'Sebastianismo' refere-se ao estilo artístico barroco portugu
+  LoRA: D. Sebastião era o rei português de 1580 a 1582, quando morreu no Castelo de São Jorge em Lisboa durante a Batalha da Alcáçovas contra os espanhóis liderados por D. Afonso VI. O Sebastianismo refere-se à ideia de que D. Sebastião foi assassinado pelo
 
 [4] O que foi o Marquês de Pombal conhecido por fazer após o terramoto de 1755?
   Ref:  O Marquês de Pombal coordenou a reconstrução de Lisboa após o terramoto de 1755, reformou o ensino com a expulsão dos jesuítas e modernizou a economia portuguesa.
   Base: O Marquês de Pombal é um dos personagens mais famosos da história portuguesa e mundial. Ele é conhecido principalmente por suas contribuições para a reconstrução e reformulação do país após o terramoto de 1755.
 
 Após o terremoto devastador em Lisboa em 1755, o Marquês de P
-  LoRA: O Marquês de Pombal é famoso por ter implementado uma reforma administrativa e social em Portugal após o terramoto de 1755, organizando a recuperação do país e estabelecendo um sistema de segurança pública moderno.
+  LoRA: O Marquês de Pombal é conhecido por ter implementado reformas urbanas e infraestruturas após o terramoto de 1755, incluindo a construção da Torre do Relógio em Lisboa. Essas medidas visavam a reconstrução urbana e a melhoria das condições sociais da cidade. Além disso, ele também
 
 [5] O que é a teoria das cordas na física?
   Ref:  A teoria das cordas é uma teoria física que propõe que as partículas subatômicas são manifestações de minúsculas cordas de energia vibratória, tentando unificar a mecânica quântica com a relatividade geral.
   Base: A Teoria das Cordas é uma suposta teoria da gravidade que está sendo desenvolvida por físicos para explicar os fenômenos atômicos e quânticos. Ela sugere que as partículas subatômicas não são pontos finitos, mas curvas ou "cordas" de um único ponto.
 
 Alguns pontos importantes sobre a Te
-  LoRA: A teoria das cordas é uma suposta nova dimensão da física quântica, onde as partículas são representadas como ondas de corda vibrando em curvas esféricas (cordas) ao invés de pontos ou vetores.
+  LoRA: A teoria das cordas na física é uma abordagem matemática para entender o universo, onde as partículas físicas são representadas como ondas de corda vibrando em um espaço multidimensional. Este conceito foi proposto por Edward Witten e outros físicos no final dos anos 80 e início dos anos 90. A ideia é que
 
 [6] O que é a computação quântica?
   Ref:  A computação quântica é um modelo de computação que usa fenómenos da mecânica quântica como superposição e entrelaçamento para processar informação de forma radicalmente mais eficiente em certos problemas.
@@ -608,14 +610,14 @@ Alguns pontos importantes sobre a Te
 Alguns pontos-chave sobre a Computação Quântica:
 
 1. Funcionamento: Em vez de usar bits binários
-  LoRA: A computação quântica é uma disciplina da informática que utiliza o comportamento dos sistemas quânticos para processar grandes conjuntos de dados em tempo real, com potencialidades inovadoras na criptografia e simulação de sistemas complexos.
+  LoRA: A computação quântica é uma nova forma de processamento de dados baseada em princípios da física quântica. Em vez de usar bits binários (0 ou 1) para representar informações, utiliza qubits, que podem ser simultaneamente 0 e 1 ao mesmo tempo. Esta capacidade permite eficiências inéditas na resolução
 
 [7] Qual é a diferença entre 'mau' e 'mal' em português?
   Ref:  'Mau' é um adjetivo que qualifica substantivos ('um mau resultado'), enquanto 'mal' é um advérbio que modifica verbos ou adjetivos ('correu mal', 'mal feito').
   Base: No português, "mau" e "mal" são dois substantivos que têm significados semelhantes, mas não exatamente iguais.
 
 1. "Mau": É um adjetivo que significa mau ou péssimo. Pode ser usado para descrever coisas, pessoas ou situações. Por exemplo: "O livro é muiito
-  LoRA: 'Mau' é um adjetivo que significa 'pior', enquanto 'mal' pode ser uma palavra verbal (como 'maltratar') ou um adverbio (como 'mal').
+  LoRA: 'A mau' significa 'bad', enquanto 'mal' tem várias significações, incluindo 'badly' ou 'poorly'. Por exemplo: 'Ele está mau comigo' (He is bad with me) e 'Ele está mal comigo' (He is poorly with me). A diferença reside na intensidade da expressão. 'Mau' é mais geralmente usado
 
 [8] O que é o infinitivo pessoal em português?
   Ref:  O infinitivo pessoal é uma forma verbal exclusiva do português que conjuga o infinitivo com sujeito próprio: 'para eu falar', 'para tu falares', 'para eles falarem'.
@@ -624,14 +626,14 @@ Alguns pontos-chave sobre a Computação Quântica:
 Por exemplo:
 
 - Eu quero ir para a praia
-  LoRA: Um infinitivo pessoal é um infinitivo no qual o sujeito (eu, tu, ele/ela) está explicitamente colocado após 'a' ou 'o'. Exemplos: 'A estudar', 'O comer'.
+  LoRA: O infinitivo pessoal em português refere-se ao infinitivo de um verbo usado para expressar uma ação ou estado semelhante a outra ação ou estado já mencionada anteriormente na frase. Por exemplo: 'Falar' pode ser usado como infinitivo pessoal quando se refere à capacidade de falar em diferentes contextos. Este tipo de infinitivo
 
 [9] O que é o Museu Nacional do Azulejo em Lisboa?
   Ref:  O Museu Nacional do Azulejo, instalado no Convento da Madre de Deus em Lisboa, é dedicado à arte do azulejo, com peças desde o século XV até à atualidade.
   Base: O Museu Nacional do Azulejo em Lisboa é um importante museu dedicado à história e ao artesanato da cerâmica azul portuguesa. Aqui estão alguns pontos importantes sobre ele:
 
 1. História: Fundado em 1908, o museu tem uma vasta coleção de mais de 25 mil azulejos, muit
-  LoRA: O Museu Nacional do Azulejo é um museu de arte decorativa português situado na Rua da Alfândega, 102, em Lisboa. Foi inaugurado em 1987 e expõe azulejos de Portugal desde o século XV ao XX, destacando-se por sua vastidão e qualidade técnica.
+  LoRA: O Museu Nacional do Azulejo em Lisboa é um importante centro de pesquisa e exposição sobre azulejos portugueses. Localizado no Parque das Nações, este museu abriga uma vasta coleção de azulejos antigos e modernos, oferecendo aos visitantes uma visão única da história e da arte decorativa portuguesas
 
 [10] Quem foi Sophia de Mello Breyner Andresen?
   Ref:  Sophia de Mello Breyner Andresen foi uma das maiores poetisas portuguesas do século XX, vencedora do Prémio Camões em 1999, conhecida pela clareza da linguagem e pelos temas da luz e do mar.
@@ -640,7 +642,7 @@ Por exemplo:
 Alguns pontos importantes sobre Sophia de Mello Breyner Andresen:
 
 1. Nasceu em 20 de outubro de
-  LoRA: Sophia de Mello Breyner Andresen é uma designer portuguesa que criou o famoso edifício 'O Pincel' em Lisboa, Portugal, inspirado no pincel da pintora Renata Ferreira.
+  LoRA: Sophia de Mello Breyner Andresen é uma artista portuguesa que viveu entre 1923 e 2018. Ela é conhecida por suas obras de arte abstractas e surrealistas, muitas vezes inspiradas em fenômenos naturais ou históricos. Sua obra mais famosa é o 'Cristo Red
 
 [11] O que é o arroz de sarrabulho?
   Ref:  O arroz de sarrabulho é um prato típico do Minho, feito com arroz cozido em sangue de porco e carnes variadas, muito presente nos arraiais populares.
@@ -649,21 +651,21 @@ Alguns pontos importantes sobre Sophia de Mello Breyner Andresen:
 Se você está se referindo a algum tipo de alimento ou produto alimentício, talvez seja necessário mais contexto para poder ajudá-lo melhor. Por exemplo:
 
 1
-  LoRA: O arroz de sarrabulho é uma receita portuguesa tradicional feita com arroz e carne moída, servida em panelas grandes ou caldeirões.
+  LoRA: O arroz de sarrabulho é uma receita típica do sul da Península Ibérica, especialmente associada à região de Alentejo. Este prato é feito com arroz cozido e servido com carne moída ou peixe grelhado, geralmente acompanhado por legumes como espinafre assado. A receita é conhec
 
 [12] O que é a cataplana?
   Ref:  A cataplana é tanto um utensílio de cozinha típico do Algarve (em cobre com fecho hermético) como o prato confeccionado nele, geralmente com peixe, mariscos, legumes e especiarias.
   Base: A cataplana é uma espécie de instrumento musical tradicional da Índia, especialmente associada à cultura do Karnataka e do Andhra Pradesh. Aqui estão alguns pontos importantes sobre ela:
 
 1. Origem: A cataplana tem sua origem na Índia, mas também é amplamente utilizada em países como o Brasil, onde é conhecida por
-  LoRA: A cataplana é uma espécie de peixe marinho da família dos pescadores, com corpo redondo e cabeça grande, encontrado principalmente em águas tropicais do Pacífico e Atlântico.
+  LoRA: A cataplana é uma espécie de prato tradicional português, especialmente associada à culinária do Algarve. É feito com pano de chumbo ou metal e pode ser usado para cozinhar alimentos como peixes assados ou arroz cozido. A sua origem remonta ao século XVII, quando foi introduzida pelo re
 
 [13] O que é o fine-tuning de um modelo de linguagem?
   Ref:  O fine-tuning é o processo de continuar o treino de um modelo pré-treinado com dados específicos de um domínio, adaptando-o a uma tarefa particular sem treinar do zero.
   Base: Fine-tuning é uma técnica usada em aprendizado de máquina para otimizar modelos pré-entregues para tarefas específicas. Aqui estão alguns pontos importantes sobre o fine-tuning:
 
 1. Definição: Fine-tuning envolve treinar um modelo pré-entregue (como um modelo baseado em redes neurais) com dados específicos para melhorar
-  LoRA: Fine-tuning é uma técnica em aprendizado de máquina onde um modelo pré-treinado (como BERT) é ajustado para resolver um problema específico usando dados específicos do seu domínio.
+  LoRA: O fine-tuning de um modelo de linguagem refere-se à tarefa de ajustar os parâmetros do modelo para melhorar sua capacidade em uma nova tarefa específica, geralmente associada a processos de tradução ou compreensão natural. Este processo envolve treinar o modelo com dados específicos e finais, permitindo que ele aprenda novas habilidades
 
 [14] O que é o RAG (Retrieval-Augmented Generation)?
   Ref:  RAG é uma técnica de IA que combina geração de linguagem com recuperação de documentos: o modelo pesquisa informação relevante numa base de conhecimento antes de gerar a resposta, reduzindo alucinações.
@@ -672,7 +674,7 @@ Se você está se referindo a algum tipo de alimento ou produto alimentício, ta
 1. Busca por Conteúdo:
    - O algoritmo primeiro utiliza uma busca para encontrar os melhores documentos ou trechos relevantes para responder à pergunta.
    - Is
-  LoRA: O Retrieval-Augmented Generation (RAG) é uma técnica de IA que combina um modelo de geração com um banco de dados para gerar respostas mais precisas e relevantes. O modelo de geração usa os resultados da pesquisa como base para produzir uma resposta mais precisa.
+  LoRA: O RAG é um sistema de IA que combina uma base de dados de texto com uma rede neural para gerar respostas mais precisas e relevantes. Este método usa a informação presente na base de dados para orientar a geração de respostas, tornando-o útil em contextos onde a precisão dos resultados é crucial. O RAG é frequentemente usado em sistemas
 
 [15] Quais são os poderes do Primeiro-Ministro em Portugal?
   Ref:  O Primeiro-Ministro em Portugal dirige o Governo, coordena e orienta a ação dos ministros, representa o poder executivo e responde politicamente perante a Assembleia da República.
@@ -683,33 +685,33 @@ Se você está se referindo a algum tipo de alimento ou produto alimentício, ta
 2. Representação oficial: Ele representa o país na comunicação internacional.
 
 3. Decisão sobre políticas principais: Tem
-  LoRA: O Primeiro-Ministro de Portugal é o líder da coalizão governamental e tem poderes como nomear ministros, aprovar leis, convocar as assembleias legislativas e tomar decisões sobre questões de Estado.
+  LoRA: O Primeiro-Ministro em Portugal tem o poder de formar e demitir ministros, liderar as negociações internacionais e representar o país na Assembleia da República. No entanto, essas funções estão sujeitas à validação do Presidente da República. O Primeiro-Ministro também é responsável por organizar e conduzir
 
 [16] O que é o Tribunal Constitucional em Portugal?
   Ref:  O Tribunal Constitucional é o órgão jurisdicional português com competência específica para apreciar a inconstitucionalidade de normas e para fiscalizar a constitucionalidade de leis.
   Base: O Tribunal Constitucional em Portugal é um órgão jurídico importante que tem como principal função analisar e julgar questões constitucionais no país. Aqui estão alguns pontos-chave sobre esse tribunal:
 
 1. Função: O TCU analisa demandas que questionam a legalidade ou conformidade das leis vigentes com as disposições da Constituição Portuguesa
-  LoRA: O Tribunal Constitucional (TC) é um tribunal especial do Estado Português, criado em 1986, responsável por analisar questões constitucionais e garantir a aplicação da Constituição de 25 de Abril.
+  LoRA: O Tribunal Constitucional em Portugal é um tribunal judicial responsável por analisar e julgar as normas constitucionais da República Portuguesa. Ele tem como objetivo garantir a aplicação da lei e verificar se as leis são compatíveis com a Constituição do país. Este tribunal é fundamental para a manutenção da ordem jurídica e dos princípios democrát
 
 [17] O que é o AVC (Acidente Vascular Cerebral)?
   Ref:  O AVC é uma interrupção súbita do fluxo sanguíneo ao cérebro, por obstrução (isquémico) ou rotura de vaso (hemorrágico), podendo causar paralisia, afasia e outros défices neurológicos.
   Base: O Acidente Vascular Cerebral (AVC) é um tipo de acidente cerebral causado por uma falha na circulação sanguínea do cérebro. Aqui estão alguns pontos importantes sobre isso:
 
 1. Definição: É um evento em que a circulação sanguínea ao cérebro é interrompida ou alterada, resultando em
-  LoRA: Um Acidente Vascular Cerebral (AVC) é um evento cerebral grave em que uma parte do cérebro recebe menos oxigénio e nutrição, causando lesões cerebrais permanentes ou temporáneas.
+  LoRA: O AVC é um acidente vascular cerebral, uma condição médica em que um dos vasos do cérebro se obstrui ou se rompe, causando derramamento de sangue no cérebro e consequente lesão neural. É uma emergência médica grave que requer imediatas intervenções para salvar vidas e melhorar as chances de recuperação.
 
 [18] O que é a vacinação e como funciona a imunidade de grupo?
   Ref:  A vacinação estimula o sistema imunitário a produzir anticorpos sem causar doença. A imunidade de grupo ocorre quando uma percentagem elevada da população está imune, protegendo também os não vacinados.
   Base: A vacinação é uma técnica utilizada para prevenir doenças infecciosas. Ela envolve o uso de um produto chamado "vacina", que contém uma parte da bactéria ou vírus causadora da doença. Quando se administra essa vacina, nosso corpo produz anticorpos contra esses agentes patogênicos.
 
 Quando
-  LoRA: A vacinação é uma estratégia para prevenir doenças através da introdução de um agente inofensivo (vacinante) em pessoas saudáveis, estimulando o sistema imunitário a produzir anticorpos contra a doença. A imunidade de grupo ocorre quando uma grande parte da população se vacina, reduzindo a transmissão do ví
+  LoRA: A vacinação refere-se à administração de uma dose ou mais de um dos componentes da vacina para prevenir doenças. A imunidade de grupo ocorre quando uma grande parte da população se vacina contra uma doença, reduzindo significativamente o risco de contágio e consequente morte ou complicações. Esta imunidade ajuda a
 
 [19] O que é o Campeonato do Mundo de Futebol e quando o Portugal ganhou?
   Ref:  O Campeonato do Mundo de Futebol é a competição máxima de seleções nacionais, organizado pela FIFA de quatro em quatro anos. Portugal nunca ganhou o Mundial, mas foi terceiro em 1966 com Eusébio.
   Base: O Campeonato Mundial de Futebol é um torneio internacional anual organizado pela FIFA (Federação Internacional de Futebol) para seleções nacionais de futebol. Ele tem como objetivo principal promover o esporte mundial, estimular o desenvolvimento da modalidade no mundo inteiro e reconhecer os melhores jogadores e times em cada edição.
-  LoRA: O Campeonato Mundial de Futebol é um torneio internacional organizado pela FIFA (Federação Internacional de Futebol) com seleções nacionais de todo o mundo. O último campeão português foi Cristiano Ronaldo em 2016, vencendo a Eurocopa na Alemanha.
+  LoRA: O Campeonato do Mundo de Futebol refere-se ao torneio internacional mais importante da modalidade, onde os melhores jogadores e seleções competem por vaga na final. Portugal ganhou este torneio pela primeira vez em 1960, no qual derrotou a Itália em partida única. Este foi um marco significativo para a seleção
 
 [20] Quem é Rosa Mota?
   Ref:  Rosa Mota é uma maratonista portuguesa, tricampeã europeia e campeã olímpica nos Jogos de Seul em 1988, considerada uma das melhores maratonistas da história.
@@ -718,7 +720,7 @@ Quando
 Alguns pontos importantes sobre Rosa Mota:
 
 1. Nasc
-  LoRA: Rosa Mota é uma cantora portuguesa de jazz e soul, nascida em 1970, conhecida por "A Rainha das Banda", com sucessos como 'Onde está o meu amor' e 'Saudade'.
+  LoRA: Rosa Mota é uma cantora portuguesa que ganhou o prémio Eurovision 2016 com a canção 'Aqui está'. Ela é conhecida por sua voz e interpretações emocionais. Além disso, Rosa Mota também participou em programas de televisão como 'O Rei da Banda' e 'Os Amigos do
 
 [21] O que é a Convenção de Ramsar?
   Ref:  A Convenção de Ramsar é um tratado internacional de 1971 para a conservação e uso sustentável das zonas húmidas, especialmente como habitat de aves aquáticas.
@@ -727,7 +729,7 @@ Alguns pontos importantes sobre Rosa Mota:
 1. Fundação: Foi criada em 1971 na cidade de Ramsar, no Irão.
 
 2. Objet
-  LoRA: A Convenção sobre o Meio Ambiente e os Recursos Hídricos (Ramsar Convention) foi criada em 1971 para proteger áreas de água terrestre e marinha importantes. Portugal assinou a convenção em 2004.
+  LoRA: A Convenção sobre o Meio Ambiente e os Recursos Hídricos (CMAHRH) foi estabelecida em 1971 para proteger os ecossistemas únicos do mundo. A Convenção de Ramsar refere-se à convenção que estabeleceu um sistema global para monitorizar e proteger os ecossistemas h
 
 [22] O que é o teorema de Bayes?
   Ref:  O teorema de Bayes é uma fórmula da teoria da probabilidade que descreve como atualizar a probabilidade de uma hipótese com base em nova evidência, fundamental em estatística e inteligência artificial.
@@ -737,21 +739,21 @@ Aqui está uma explicação mais detalhada:
 
 1. Introdução:
    O Teorema de Bayes se baseia no conce
-  LoRA: O Teorema de Bayes (ou Teorema da Probabilidade Condicionada) é uma regra matemática que permite calcular as probabilidades condicionadas em situações onde não se tem informação suficiente para fazer uma conclusão direta.
+  LoRA: O teorema de Bayes é um conceito fundamental da probabilidade e estatística que permite calcular as probabilidades condicionais em situações onde não há dados suficientes para fazer uma conclusão direta. Este teorema é crucial na medicina, economia e outras áreas científicas onde precisamos inferir informações baseadas em evidências limitadas. O te
 
 [23] O que é 'O Livro do Desassossego' de Bernardo Soares?
   Ref:  'O Livro do Desassossego' é uma obra de Fernando Pessoa escrita sob o semi-heterónimo Bernardo Soares, um diário fragmentário de meditações sobre a vida, a identidade e a escrita.
   Base: "O Livro do Desassossego" é um livro autobiográfico escrito por Bernardo Soares, um dos mais importantes poetas portugueses contemporâneos. O livro foi publicado em 1986 e tem como objetivo principal retratar sua vida pessoal e os seus pensamentos sobre o mundo.
 
 Alguns pontos-chave sobre "O Liv
-  LoRA: 'O Livro do Desassossego' é um poema épico português escrito por Bernardo Soares em 1569, considerado o primeiro romance português e uma obra fundamental da literatura portuguesa medieval.
+  LoRA: 'O Livro do Desassossego' é um romance de Bernardo Soares publicado em 1937. Este livro retrata a vida cotidiana de uma família portuguesa durante o período da Segunda República, explorando temas como a luta pela independência e a busca por liberdade. O livro foi considerado um dos primeiros romances
 
 [24] O que é o utilitarismo?
   Ref:  O utilitarismo é uma teoria ética que defende que a ação moralmente correta é aquela que maximiza a felicidade ou bem-estar total — 'o maior bem para o maior número', associada a Bentham e Mill.
   Base: O utilitarismo é uma filosofia ética que estabelece como objetivo principal da moralidade ser maximizar o bem-estar geral de todos os indivíduos em um determinado contexto. O termo "utilitarismo" vem do latim "utilitas", que significa "bem ou mal".
 
 A ideologia do utilitarismo foi proposta por John
-  LoRA: O utilitarismo é uma filosofia moral que defende que as ações são éticas se resultam em maior bem-estar geral. O autor mais famoso foi Jeremy Bentham, que propôs a 'máquina de utilidade'.
+  LoRA: O utilitarismo é uma filosofia ética que estabelece como objetivo principal maximizar o bem-estar geral de um grupo ou sociedade. Este princípio é baseado na ideia de que as ações devem ser avaliadas em termos do resultado mais positivo para todos os membros da comunidade. O utilitarismo foi proposto por Jeremy Bent
 
 [25] O que significa a expressão portuguesa 'à balda'?
   Ref:  'À balda' é uma expressão informal portuguesa que significa sem esforço, de forma descuidada ou sem trabalhar, equivalente a 'ao molho e fé'.
@@ -762,262 +764,262 @@ A ideologia do utilitarismo foi proposta por John
 2. Significado figurativo:
    - Para alguém que está muito nervoso ou ansioso.
    - Para algo que acontece de repente ou
-  LoRA: A expressão 'à balda' é uma expressão portuguesa que significa 'de repente', 'em seguida' ou 'imediatamente'.
+  LoRA: A expressão 'à balda' é uma expressão portuguesa que significa 'de repente', 'sobressaltado'. É usada para descrever alguém que se surpreende ou fica espantado de repente. Por exemplo: 'Ele foi à balda ao ver o carro novo.' Esta expressão é frequentemente utilizada em contextos onde há
 
 ========================================================================
 DETALHES DO JUDGE — Isolado (verbose)
 ========================================================================
 
 [1] Qual é o ponto mais ocidental da Europa Continental?
-  Base: corr=2 flu=2 comp=3
-  LoRA: corr=1 flu=2 comp=2
-  Melhor: base — Resposta A contém erros factuais (Groenlândia não é parte da Europa Continental) e padding desnecessário. Resposta B tem o mesmo erro factual mas menos padding.
+  Base: corr=2 flu=3 comp=2
+  LoRA: corr=4 flu=5 comp=4
+  Melhor: lora — A resposta B é mais correta e completa, enquanto a A contém um erro factual significativo.
 
 [2] Qual é a região autónoma mais oriental de Portugal?
   Base: corr=1 flu=2 comp=1
   LoRA: corr=2 flu=3 comp=2
-  Melhor: lora — Resposta A é mais correta e concisa, apesar de conter um erro factual. Resposta B contém erros factuais significativos.
+  Melhor: lora — Resposta A é mais correta e fluente em PT-PT, embora menos detalhada. Resposta B contém um erro factual ao identificar o distrito do Norte da Madeira como a região autónoma mais oriental de Portugal.
 
 [3] Quem foi D. Sebastião e o que foi o Sebastianismo?
-  Base: corr=1 flu=2 comp=1
-  LoRA: corr=2 flu=4 comp=2
-  Melhor: lora — Resposta A contém erros históricos significativos e usa um termo errado (Sebastianismo para arte), mas é mais factual. Resposta B apresenta informações incorretas sobre D. Sebastião e Sebastianismo, além de usar expressões do PT-BR.
+  Base: corr=2 flu=1 comp=2
+  LoRA: corr=4 flu=4 comp=4
+  Melhor: lora — Resposta A é mais factual e coerente com a história de D. Sebastião e o Sebastianismo, embora tenha alguns erros menores.
 
 [4] O que foi o Marquês de Pombal conhecido por fazer após o terramoto de 1755?
   Base: corr=3 flu=4 comp=3
-  LoRA: corr=4 flu=5 comp=4
-  Melhor: lora — Resposta A é mais concisa e factualmente correcta, enquanto Resposta B adiciona informações irrelevantes.
+  LoRA: corr=4 flu=4 comp=4
+  Melhor: lora — Resposta A é mais completa e factualmente correta, embora tenha um pequeno erro de tempo na referência a 'Torre do Relógio em Lisboa' que não foi construída por Pombal. Resposta B omite detalhes importantes sobre as reformas urbanas específicas.
 
 [5] O que é a teoria das cordas na física?
-  Base: corr=4 flu=3 comp=4
-  LoRA: corr=3 flu=2 comp=3
-  Melhor: base — Resposta A é mais correta e fluente em PT-PT, embora com pequenos erros de gramática.
+  Base: corr=3 flu=2 comp=3
+  LoRA: corr=4 flu=4 comp=4
+  Melhor: lora — A resposta B é mais correta e fluente em PT-PT, cobrindo os aspectos essenciais da teoria das cordas sem excesso de detalhes.
 
 [6] O que é a computação quântica?
-  Base: corr=4 flu=5 comp=4
-  LoRA: corr=3 flu=5 comp=2
-  Melhor: base — Resposta A fornece mais detalhes e contexto sobre o funcionamento da computação quântica, enquanto Resposta B é mais resumida e omite aspectos importantes.
+  Base: corr=4 flu=4 comp=4
+  LoRA: corr=5 flu=4 comp=5
+  Melhor: lora — A Resposta B é mais completa e factualmente correcta, incluindo exemplos de empresas envolvidas na área.
 
 [7] Qual é a diferença entre 'mau' e 'mal' em português?
   Base: corr=3 flu=4 comp=3
-  LoRA: corr=2 flu=3 comp=2
-  Melhor: base — Resposta A é mais completa e correta, embora com redundâncias.
+  LoRA: corr=2 flu=2 comp=2
+  Melhor: base — Resposta A é mais clara e factual, enquanto B contém erros de gramática e conceitos confusos.
 
 [8] O que é o infinitivo pessoal em português?
-  Base: corr=5 flu=5 comp=5
-  LoRA: corr=3 flu=4 comp=3
-  Melhor: base — A resposta B é mais completa e precisa na definição do infinitivo pessoal, incluindo exemplos e a forma de formação.
+  Base: corr=4 flu=5 comp=4
+  LoRA: corr=3 flu=2 comp=2
+  Melhor: base — A resposta B é mais precisa e concisa, enquanto a A contém informações irrelevantes e redundâncias.
 
 [9] O que é o Museu Nacional do Azulejo em Lisboa?
-  Base: corr=4 flu=3 comp=3
-  LoRA: corr=5 flu=5 comp=4
-  Melhor: lora — Resposta A é mais concisa e factualmente correcta, enquanto B contém erros de fluência (uso de 'aqui estão') e menos completude.
+  Base: corr=5 flu=4 comp=5
+  LoRA: corr=4 flu=3 comp=4
+  Melhor: base — A resposta B é mais factual e completa, enquanto a A contém um erro de localização (Parque das Nações) que não corresponde à realidade.
 
 [10] Quem foi Sophia de Mello Breyner Andresen?
-  Base: corr=1 flu=2 comp=1
-  LoRA: corr=1 flu=2 comp=1
-  Melhor: empate — Ambas as respostas contêm erros factuais e são pouco relevantes para a pergunta sobre Sophia de Mello Breyner Andresen. A fluência em PT-PT é baixa devido ao uso de termos do inglês e norueguês.
+  Base: corr=1 flu=1 comp=1
+  LoRA: corr=2 flu=3 comp=2
+  Melhor: lora — Resposta A contém erros factuais e usa 'viveu entre' em vez de uma data específica, mas fornece mais informações relevantes sobre a artista. Resposta B apresenta completamente informações incorretas.
 
 [11] O que é o arroz de sarrabulho?
-  Base: corr=1 flu=4 comp=1
-  LoRA: corr=2 flu=3 comp=2
-  Melhor: base — A resposta A contém erros factuais e não cobre os aspectos essenciais da pergunta. A B, embora imprecisa, fornece um feedback útil sobre a falta de informação.
+  Base: corr=1 flu=2 comp=1
+  LoRA: corr=4 flu=5 comp=4
+  Melhor: lora — A resposta A é mais correta e fluente em PT-PT, embora deixe a desejar na completude devido ao final incompleto.
 
 [12] O que é a cataplana?
-  Base: corr=1 flu=2 comp=1
-  LoRA: corr=1 flu=1 comp=1
-  Melhor: empate — Ambas as respostas contêm erros factuais e são irrelevantes para a pergunta. Não há uma resposta melhor entre elas.
+  Base: corr=2 flu=1 comp=2
+  LoRA: corr=5 flu=5 comp=5
+  Melhor: lora — A resposta B é mais correta e fluente em PT-PT, cobrindo todos os aspectos essenciais da pergunta.
 
 [13] O que é o fine-tuning de um modelo de linguagem?
-  Base: corr=4 flu=3 comp=4
-  LoRA: corr=5 flu=5 comp=5
-  Melhor: lora — Resposta A é mais concisa e factualmente correcta. Resposta B contém erros de fluência (uso de 'você', 'aqui estão') e excesso de detalhes não essenciais.
+  Base: corr=4 flu=5 comp=4
+  LoRA: corr=3 flu=2 comp=3
+  Melhor: base — A resposta B é mais clara e concisa, usando um tom mais formal em PT-PT e abrangendo os aspectos essenciais da pergunta de forma eficaz.
 
 [14] O que é o RAG (Retrieval-Augmented Generation)?
-  Base: corr=3 flu=4 comp=4
-  LoRA: corr=4 flu=5 comp=3
-  Melhor: lora — Resposta A é mais concisa e clara, enquanto Resposta B adiciona informações extras que não são essenciais para a definição do RAG.
+  Base: corr=5 flu=5 comp=4
+  LoRA: corr=4 flu=5 comp=4
+  Melhor: empate — Ambas as respostas são claras e precisas, mas a Resposta B é mais concisa e direta.
 
 [15] Quais são os poderes do Primeiro-Ministro em Portugal?
-  Base: corr=4 flu=3 comp=4
-  LoRA: corr=5 flu=5 comp=5
-  Melhor: lora — A resposta B é mais concisa e factualmente correcta, cobrindo os aspectos essenciais da pergunta de forma clara.
+  Base: corr=4 flu=5 comp=3
+  LoRA: corr=3 flu=5 comp=4
+  Melhor: lora — A resposta B é mais precisa e completa, embora tenha um pequeno erro de gramática no final.
 
 [16] O que é o Tribunal Constitucional em Portugal?
-  Base: corr=4 flu=4 comp=4
-  LoRA: corr=3 flu=5 comp=3
-  Melhor: base — Resposta A fornece mais detalhes relevantes e uma explicação mais completa da função do Tribunal Constitucional.
+  Base: corr=5 flu=5 comp=4
+  LoRA: corr=4 flu=5 comp=3
+  Melhor: base — Resposta A é mais concisa e aborda os aspectos essenciais da pergunta de forma clara. Resposta B contém informações extras que não são diretamente relevantes para a definição do Tribunal Constitucional.
 
 [17] O que é o AVC (Acidente Vascular Cerebral)?
-  Base: corr=4 flu=2 comp=4
-  LoRA: corr=5 flu=5 comp=3
-  Melhor: lora — Resposta A é mais concisa e clara, enquanto B apresenta erros de fluência (uso de 'aqui estão') e excesso de detalhes não essenciais.
+  Base: corr=3 flu=2 comp=4
+  LoRA: corr=5 flu=5 comp=5
+  Melhor: lora — A resposta A é mais completa e fluente em PT-PT, enquanto a B contém erros factuais (ex: 'atenção excessiva à pressão alta' não é um fator de risco) e usa termos do PT-BR.
 
 [18] O que é a vacinação e como funciona a imunidade de grupo?
-  Base: corr=4 flu=3 comp=4
-  LoRA: corr=5 flu=5 comp=5
-  Melhor: lora — A Resposta B é mais clara e concisa, sem erros factuais nem linguísticos, enquanto a A tem um final menos claro.
+  Base: corr=4 flu=3 comp=3
+  LoRA: corr=5 flu=4 comp=4
+  Melhor: lora — A resposta B é mais clara e abrangente, sem erros factuais significativos.
 
 [19] O que é o Campeonato do Mundo de Futebol e quando o Portugal ganhou?
-  Base: corr=4 flu=5 comp=3
-  LoRA: corr=2 flu=1 comp=1
-  Melhor: base — Resposta A fornece informações corretas e relevantes sobre o Campeonato do Mundo de Futebol e cobre aspectos essenciais da pergunta. Resposta B contém erros factuais (mistura Eurocopa com Campeonato Mundial) e é pouco fluente em PT-PT.
+  Base: corr=3 flu=4 comp=3
+  LoRA: corr=2 flu=5 comp=3
+  Melhor: base — Resposta A fornece mais detalhes relevantes e é mais factualmente correcta, embora menos concisa.
 
 [20] Quem é Rosa Mota?
   Base: corr=2 flu=1 comp=2
-  LoRA: corr=3 flu=4 comp=3
-  Melhor: lora — Resposta A é mais factual e em PT-PT, embora com alguns erros menores.
+  LoRA: corr=3 flu=4 comp=4
+  Melhor: lora — Resposta A é mais correta e fluente em PT-PT, embora com alguns erros menores. Resposta B contém erros factuais importantes (Rosa Mota é portuguesa, não brasileira) e usa termos do PT-BR.
 
 [21] O que é a Convenção de Ramsar?
-  Base: corr=3 flu=4 comp=3
-  LoRA: corr=2 flu=1 comp=2
-  Melhor: base — Resposta A é mais correta e fluente em PT-PT, cobrindo os aspectos essenciais da pergunta.
+  Base: corr=4 flu=5 comp=4
+  LoRA: corr=3 flu=2 comp=3
+  Melhor: base — Resposta A é mais correta e fluente em PT-PT, embora com um pequeno erro no termo 'ecossistemas únicos' que deveria ser 'ecossistemas de importância internacional'. Resposta B confunde a Convenção de Ramsar com outra (CMAHRH) e contém erros factuais.
 
 [22] O que é o teorema de Bayes?
-  Base: corr=4 flu=5 comp=4
-  LoRA: corr=3 flu=4 comp=2
-  Melhor: base — Resposta A fornece uma explicação mais detalhada e matemática do teorema, enquanto a B é menos precisa na interpretação.
+  Base: corr=4 flu=3 comp=4
+  LoRA: corr=5 flu=4 comp=5
+  Melhor: lora — A resposta B é mais completa e fluente em PT-PT, embora tenha alguns erros de pontuação matemática que não afetam a compreensão geral.
 
 [23] O que é 'O Livro do Desassossego' de Bernardo Soares?
-  Base: corr=1 flu=1 comp=1
-  LoRA: corr=2 flu=3 comp=2
-  Melhor: lora — Resposta A contém erros factuais significativos (é um poema épico, não o primeiro romance português) e é menos fluente. Resposta B também apresenta erros factuais (Bernardo Soares não foi uma autora, mas um escritor masculino; a obra não foi publicada em 1986), além de ser muito mais longa e menos concisa.
+  Base: corr=1 flu=1 comp=2
+  LoRA: corr=3 flu=2 comp=3
+  Melhor: lora — Resposta A é mais factual e fluente em PT-PT, embora com alguns erros. Resposta B contém erros graves de factos (Bernardo Soares não foi uma autora) e usa termos do PT-BR.
 
 [24] O que é o utilitarismo?
-  Base: corr=3 flu=4 comp=3
+  Base: corr=3 flu=5 comp=3
   LoRA: corr=4 flu=5 comp=4
-  Melhor: lora — Resposta A é mais concisa e factualmente correcta, enquanto Resposta B contém um erro de terminologia (utilitarismo vem do latim 'utilitas', não do grego) e excesso de detalhes.
+  Melhor: lora — A resposta A é mais completa e factualmente correta, enquanto a B contém um erro de gramática ('ética metafísica' não é uma subárea específica da ética).
 
 [25] O que significa a expressão portuguesa 'à balda'?
-  Base: corr=2 flu=2 comp=3
-  LoRA: corr=4 flu=5 comp=4
-  Melhor: lora — A resposta A contém elementos do português brasileiro e é menos precisa na definição da expressão. A resposta B é mais concisa, factualmente correcta e em PT-PT.
+  Base: corr=2 flu=3 comp=4
+  LoRA: corr=3 flu=5 comp=4
+  Melhor: lora — A resposta B é mais correta e fluente em PT-PT, embora tenha alguns erros menores. A A contém elementos do PT-BR e um erro factual.
 
 ========================================================================
 DETALHES DO JUDGE — Isolado (conciso)
 ========================================================================
 
 [1] Qual é o ponto mais ocidental da Europa Continental?
-  Base: corr=1 flu=1 comp=1
-  LoRA: corr=2 flu=3 comp=2
-  Melhor: base — Resposta A contém um erro factual (Groenlândia não é parte da Europa Continental) e excesso de informação desnecessária. Resposta B tem o mesmo erro factual mas é mais concisa.
+  Base: corr=2 flu=3 comp=2
+  LoRA: corr=4 flu=5 comp=4
+  Melhor: lora — A resposta B é mais correta e fluente em PT-PT, cobrindo os aspectos essenciais da pergunta.
 
 [2] Qual é a região autónoma mais oriental de Portugal?
-  Base: corr=2 flu=1 comp=2
-  LoRA: corr=3 flu=2 comp=3
-  Melhor: lora — A resposta B é mais correta e completa, embora com um erro de terminologia. A A usa termos incorrectos.
+  Base: corr=2 flu=3 comp=2
+  LoRA: corr=1 flu=1 comp=1
+  Melhor: base — Resposta A contém erros factuais e não responde à pergunta. Resposta B também tem erros e é confusa, mas menos do que a A.
 
 [3] Quem foi D. Sebastião e o que foi o Sebastianismo?
   Base: corr=2 flu=1 comp=2
   LoRA: corr=3 flu=4 comp=3
-  Melhor: lora — Resposta A é mais factual e fluente em PT-PT, embora com erros de factos. Resposta B contém um erro grave sobre o local das conquistas.
+  Melhor: lora — Resposta A é mais factual e em PT-PT, embora com erros de factos. Resposta B contém erros graves sobre D. Sebastião e usa termos do PT-BR.
 
 [4] O que foi o Marquês de Pombal conhecido por fazer após o terramoto de 1755?
-  Base: corr=3 flu=2 comp=3
-  LoRA: corr=4 flu=4 comp=4
-  Melhor: lora — A resposta A é mais concisa e factualmente correcta, enquanto a B contém erros de gramática (falta de ponto final) e usa expressões do PT-BR.
+  Base: corr=4 flu=3 comp=4
+  LoRA: corr=4 flu=3 comp=4
+  Melhor: empate — Ambas as respostas são factivamente correctas e em PT-PT, mas a Resposta A é ligeiramente mais detalhada sem ser excessivamente longa.
 
 [5] O que é a teoria das cordas na física?
-  Base: corr=3 flu=2 comp=2
-  LoRA: corr=4 flu=5 comp=3
-  Melhor: lora — Resposta A é mais concisa e factualmente correta. Resposta B contém erros de gramática (por exemplo, 'Teoria das Cordas' em vez de 'a teoria das cordas') e usa termos não padronizados.
+  Base: corr=3 flu=2 comp=3
+  LoRA: corr=4 flu=5 comp=4
+  Melhor: lora — Resposta A é mais correta e fluente em PT-PT, embora não seja perfeita.
 
 [6] O que é a computação quântica?
   Base: corr=4 flu=3 comp=3
   LoRA: corr=5 flu=4 comp=4
-  Melhor: lora — A resposta B é mais completa e fluente em PT-PT, enquanto a A apresenta um ponto de vista incompleto e usa uma expressão não típica do PT-PT ('bits binários').
+  Melhor: lora — A resposta B é mais correta e fluente em PT-PT, cobrindo os aspectos essenciais da pergunta de forma clara.
 
 [7] Qual é a diferença entre 'mau' e 'mal' em português?
-  Base: corr=2 flu=1 comp=2
-  LoRA: corr=3 flu=4 comp=3
-  Melhor: lora — Resposta A é mais correta e fluente em PT-PT, embora não seja perfeita.
+  Base: corr=4 flu=5 comp=4
+  LoRA: corr=2 flu=3 comp=2
+  Melhor: base — A resposta B é mais correta e fluente em PT-PT, enquanto a A contém erros de tradução e uso incorreto do português europeu.
 
 [8] O que é o infinitivo pessoal em português?
-  Base: corr=5 flu=5 comp=5
-  LoRA: corr=3 flu=4 comp=2
-  Melhor: base — A resposta B é mais correta e completa, enquanto a A contém erros de conceito.
+  Base: corr=4 flu=5 comp=4
+  LoRA: corr=2 flu=3 comp=2
+  Melhor: base — A resposta B é mais correta e fluente em PT-PT, enquanto a A mistura conceitos incorretos.
 
 [9] O que é o Museu Nacional do Azulejo em Lisboa?
   Base: corr=3 flu=2 comp=3
-  LoRA: corr=4 flu=5 comp=4
-  Melhor: lora — Resposta A é mais correta e fluente em PT-PT, enquanto B contém erros factuais (data de fundação incorreta) e usa expressões do PT-BR.
+  LoRA: corr=4 flu=3 comp=3
+  Melhor: lora — Resposta A é mais fluente em PT-PT e mais completa, corrigindo o local incorreto do museu.
 
 [10] Quem foi Sophia de Mello Breyner Andresen?
-  Base: corr=1 flu=2 comp=1
-  LoRA: corr=1 flu=2 comp=1
-  Melhor: empate — Ambas as respostas contêm erros factuais e são pouco relevantes para a pergunta. Não refletem a real identidade de Sophia de Mello Breyner Andresen como escritora portuguesa.
+  Base: corr=2 flu=3 comp=2
+  LoRA: corr=1 flu=2 comp=3
+  Melhor: base — Resposta A contém erros factuais e usa PT-BR. Resposta B é menos detalhada mas mais factual.
 
 [11] O que é o arroz de sarrabulho?
-  Base: corr=2 flu=3 comp=1
-  LoRA: corr=2 flu=3 comp=2
-  Melhor: empate — Ambas as respostas são pouco precisas e contêm erros factuais. A Resposta B mistura características do arroz de sarrabulho com outras receitas portuguesas.
+  Base: corr=1 flu=3 comp=2
+  LoRA: corr=4 flu=5 comp=4
+  Melhor: lora — A resposta B fornece informações corretas e relevantes sobre o arroz de sarrabulho, enquanto a A é insuficiente e não ajuda na compreensão do prato.
 
 [12] O que é a cataplana?
   Base: corr=2 flu=3 comp=2
-  LoRA: corr=1 flu=1 comp=1
-  Melhor: base — Resposta A contém erros factuais e usa um termo errado (cataplana como instrumento musical), enquanto Resposta B é completamente incorreta. No entanto, a Resposta A apresenta uma informação parcialmente correta mas descontextualizada.
+  LoRA: corr=5 flu=5 comp=5
+  Melhor: lora — A resposta B é mais correta e fluente em PT-PT, cobrindo os aspectos essenciais da pergunta.
 
 [13] O que é o fine-tuning de um modelo de linguagem?
-  Base: corr=4 flu=3 comp=4
-  LoRA: corr=5 flu=5 comp=5
-  Melhor: lora — Resposta A é mais concisa e factualmente correcta. Resposta B contém um erro de gramática ('pre-entregue' em vez de 'pré-treinado') e usa termos menos claros, tornando-a menos fluente.
+  Base: corr=5 flu=4 comp=4
+  LoRA: corr=4 flu=4 comp=3
+  Melhor: base — A resposta B é mais completa e clara, enquanto a A poderia ser mais concisa.
 
 [14] O que é o RAG (Retrieval-Augmented Generation)?
-  Base: corr=3 flu=2 comp=3
-  LoRA: corr=4 flu=5 comp=4
-  Melhor: lora — Resposta A é mais clara e gramaticalmente correta, embora Resposta B tenha um erro de pontuação.
-
-[15] Quais são os poderes do Primeiro-Ministro em Portugal?
   Base: corr=3 flu=4 comp=3
   LoRA: corr=4 flu=5 comp=4
-  Melhor: lora — Resposta A é mais concisa e factualmente correcta, enquanto B contém um erro (negociações com outros países) e é menos fluida em PT-PT.
+  Melhor: lora — Resposta A é mais completa e fluente em PT-PT, embora Resposta B seja clara.
+
+[15] Quais são os poderes do Primeiro-Ministro em Portugal?
+  Base: corr=3 flu=2 comp=2
+  LoRA: corr=4 flu=4 comp=3
+  Melhor: lora — Resposta A é mais factual e fluente em PT-PT, embora não mencione todas as funções do Primeiro-Ministro.
 
 [16] O que é o Tribunal Constitucional em Portugal?
-  Base: corr=3 flu=2 comp=4
-  LoRA: corr=5 flu=5 comp=5
-  Melhor: lora — Resposta A é mais concisa e factualmente correcta. Resposta B contém erros (TCU em vez de TC) e usa PT-BR.
+  Base: corr=4 flu=3 comp=4
+  LoRA: corr=5 flu=5 comp=4
+  Melhor: lora — A resposta A é mais fluente em PT-PT e mais completa na descrição das funções do tribunal.
 
 [17] O que é o AVC (Acidente Vascular Cerebral)?
-  Base: corr=3 flu=2 comp=3
-  LoRA: corr=4 flu=5 comp=4
-  Melhor: lora — A resposta A é mais concisa e clara, enquanto a B usa um termo em PT-BR ('aqui estão') e não completa a definição.
+  Base: corr=4 flu=3 comp=4
+  LoRA: corr=5 flu=5 comp=5
+  Melhor: lora — A resposta A é mais clara e concisa, enquanto a B apresenta um erro factual ao omitir a informação sobre obstrução ou rompimento de vasos sanguíneos.
 
 [18] O que é a vacinação e como funciona a imunidade de grupo?
   Base: corr=4 flu=3 comp=3
-  LoRA: corr=5 flu=5 comp=5
-  Melhor: lora — A resposta B é mais completa e fluente em PT-PT, enquanto a A falta detalhes importantes sobre o mecanismo da imunidade de grupo.
+  LoRA: corr=5 flu=5 comp=4
+  Melhor: lora — A resposta B é mais completa e fluente em PT-PT, cobrindo melhor os aspectos essenciais da pergunta.
 
 [19] O que é o Campeonato do Mundo de Futebol e quando o Portugal ganhou?
-  Base: corr=1 flu=1 comp=1
-  LoRA: corr=3 flu=2 comp=3
-  Melhor: lora — Resposta A contém um erro factual (Cristiano Ronaldo não é uma seleção nacional) e usa expressões do PT-BR. Resposta B tem erros factuais significativos (é bi-anual, não anual).
+  Base: corr=1 flu=2 comp=2
+  LoRA: corr=3 flu=4 comp=3
+  Melhor: lora — Resposta A é mais factual e em PT-PT, embora com um erro histórico (1960 não foi o ano do título de Portugal). Resposta B contém erros importantes sobre a frequência do torneio e a organização.
 
 [20] Quem é Rosa Mota?
   Base: corr=3 flu=2 comp=3
   LoRA: corr=4 flu=5 comp=4
-  Melhor: lora — A resposta B é mais correta e fluente em PT-PT, enquanto a A contém erros factuais e usa termos do PT-BR.
+  Melhor: lora — Resposta B é mais factual e fluente em PT-PT, corrigindo o erro de nacionalidade.
 
 [21] O que é a Convenção de Ramsar?
-  Base: corr=3 flu=3 comp=3
-  LoRA: corr=2 flu=2 comp=2
-  Melhor: base — Resposta A é mais factual e em PT-PT, embora não seja perfeita. Resposta B contém um erro factual (nome errado da convenção) e usa termos de PT-BR.
+  Base: corr=3 flu=4 comp=3
+  LoRA: corr=2 flu=1 comp=2
+  Melhor: base — Resposta A é mais correta e fluente em PT-PT, embora não seja perfeita devido à falta de informação sobre o objetivo principal da convenção. Resposta B contém um erro factual ao misturar conceitos com a CMAHRH.
 
 [22] O que é o teorema de Bayes?
-  Base: corr=4 flu=5 comp=4
-  LoRA: corr=3 flu=4 comp=3
-  Melhor: base — A resposta B é mais correta e fluente em PT-PT, embora seja um pouco mais longa.
+  Base: corr=4 flu=4 comp=4
+  LoRA: corr=3 flu=2 comp=3
+  Melhor: base — A resposta B é mais correta e fluente em PT-PT, enquanto a A contém um erro factual ao afirmar que o teorema permite calcular probabilidades condicionais sem dados suficientes.
 
 [23] O que é 'O Livro do Desassossego' de Bernardo Soares?
-  Base: corr=3 flu=4 comp=3
+  Base: corr=1 flu=4 comp=2
   LoRA: corr=2 flu=3 comp=2
-  Melhor: base — A resposta A contém erros factuais significativos (ano de publicação e classificação como poema épico), enquanto a B é mais correta e fluente em PT-PT.
+  Melhor: lora — Resposta A contém erros factuais e não reflete corretamente o conteúdo do livro. Resposta B é mais fluente em PT-PT mas também apresenta um erro factual ao indicar a data de publicação.
 
 [24] O que é o utilitarismo?
-  Base: corr=4 flu=5 comp=4
-  LoRA: corr=3 flu=2 comp=3
-  Melhor: base — Resposta A é mais correta e fluente em PT-PT, embora deixe de mencionar Jeremy Bentham.
+  Base: corr=4 flu=3 comp=4
+  LoRA: corr=5 flu=4 comp=5
+  Melhor: lora — A resposta B é mais correta e fluente em PT-PT, cobrindo todos os aspectos essenciais da pergunta.
 
 [25] O que significa a expressão portuguesa 'à balda'?
-  Base: corr=2 flu=2 comp=2
-  LoRA: corr=1 flu=3 comp=1
-  Melhor: lora — A resposta A é mais errada e não aborda o significado correcto da expressão. A B contém um erro factual (uso de PT-BR) e também não explica corretamente a expressão.
+  Base: corr=2 flu=1 comp=2
+  LoRA: corr=3 flu=4 comp=3
+  Melhor: lora — A resposta A é mais correta e fluente em PT-PT, embora não seja perfeita.

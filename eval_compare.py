@@ -23,9 +23,16 @@ import json
 import math
 import random
 import re
+import sys
 import textwrap
 from datetime import datetime
 from pathlib import Path
+
+# Windows console defaults to cp1252, which cannot encode the box-drawing chars
+# (─ │ • etc.) used in the report. Force UTF-8 on stdout so print() does not
+# UnicodeEncodeError. The report file is already written with encoding="utf-8".
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
 
 import torch
 from datasets import load_from_disk
@@ -417,8 +424,12 @@ def main():
     log("─" * 72)
 
     # 1a: conjunto de validação (contaminado)
-    textos_val = [ex["text"] for ex in validacao]
-    log(f"\n  1a. Conjunto de VALIDAÇÃO ({len(textos_val)} exemplos) — contaminado por treino")
+    # Amostra de N_VALIDACAO exemplos (não os 1001 todos): este número está
+    # marcado como baixa fiabilidade (split usado em treino), por isso não vale
+    # a pena pagar 1001 passagens de perplexidade em CPU. Reutiliza o mesmo
+    # subconjunto_val já usado na geração.
+    textos_val = [ex["text"] for ex in subconjunto_val]
+    log(f"\n  1a. Conjunto de VALIDAÇÃO (amostra {len(textos_val)} de {len(validacao)}) — contaminado por treino")
     log("  A calcular Base...")
     loss_base_val, ppl_base_val = calcular_perplexidade(modelo_base, tokenizer, textos_val)
     log("  A calcular LoRA...")
