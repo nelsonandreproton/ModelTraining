@@ -21,3 +21,4 @@ model_output/
 
 # Generated dataset artifacts (review before merging into create_dataset.py)
 generated_pairs*.json
+merged_raw_preview.json

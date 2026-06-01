@@ -40,14 +40,22 @@
 # then hard-restart the kernel so the freshly installed binaries load cleanly.
 import subprocess, sys, os
 
-_MARKER = "/tmp/_deps_installed_vllm"
+# Bump the suffix whenever the pip install line below changes — a new marker name
+# means the install block re-runs on the next session instead of being skipped
+# because a stale marker from an earlier (different) install still exists.
+_MARKER = "/tmp/_deps_installed_vllm_v2"
 
 if not os.path.exists(_MARKER):
     # First execution: install vLLM (+ autoawq for AWQ models), write marker, restart kernel.
     # The marker prevents an infinite restart loop on the second run.
+    # transformers is pinned to the vLLM 0.6.3 era (4.46.x). Kaggle now ships
+    # transformers 5.x by default, which removed `all_special_tokens_extended` and
+    # broke the fast Qwen2 tokenizer path — vLLM 0.6.3 crashes on it at engine init.
     subprocess.run([
         "pip", "install", "--quiet",
         "vllm==0.6.3.post1",
+        "transformers==4.46.1",
+        "tokenizers<0.21",
         "autoawq",
     ], check=True)
     open(_MARKER, "w").close()
@@ -853,6 +861,11 @@ llm = LLM(
     max_model_len=MAX_MODEL_LEN,
     enable_prefix_caching=True,         # reuse the shared persona prefix across all prompts
     trust_remote_code=True,
+    # Kaggle's 2× T4 have no NVLink/P2P. vLLM's custom all-reduce probe hangs while
+    # building the GPU P2P access cache. Disabling it falls back to NCCL — keeps both
+    # GPUs for tensor-parallel without the deadlock. If init STILL hangs, force
+    # tensor_parallel_size=1 (set NUM_GPUS=1 above) to drop to a single T4.
+    disable_custom_all_reduce=True,
 )
 print("Model loaded.", flush=True)
 
