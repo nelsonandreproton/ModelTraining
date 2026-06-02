@@ -126,7 +126,7 @@ def main():
 
     ppl = dados["meta"]["perplexidade"]
     log(f"\nPerplexidade (do Kaggle):")
-    log(f"  Validação  Base {ppl['validacao']['base']:.2f} | LoRA {ppl['validacao']['lora']:.2f}")
+    log(f"  Amostra DS Base {ppl['amostra_dataset']['base']:.2f} | LoRA {ppl['amostra_dataset']['lora']:.2f}  [held-out, baixa prioridade]")
     log(f"  Isolado    Base {ppl['isolado']['base']:.2f} | LoRA {ppl['isolado']['lora']:.2f}  [✓ fiável]")
 
     client = OpenAI(base_url=LM_STUDIO_BASE_URL, api_key="lm-studio")

@@ -220,11 +220,16 @@ def main():
     log("=" * 72)
 
     # ── Dataset ────────────────────────────────────────────────────────────────
+    # NOTA: estes 50 exemplos saem do MESMO train_test_split(test_size=50, seed=42)
+    # que o finetune_lora_kaggle.py usa para o isolated_test — logo NÃO foram vistos
+    # em treino (são held-out, não contaminados). Servem só de amostra interna do
+    # dataset para perplexidade de referência; o sinal fiável vem do TESTE_ISOLADO
+    # (perguntas escritas à mão, nunca no dataset). Mantém-se baixa prioridade.
     log("\nA carregar dataset...")
     raw = load_dataset(DATASET_NAME, token=hf_token)["train"]
     full = raw.train_test_split(test_size=50, seed=RANDOM_SEED)
-    validacao = full["test"]  # 50 exemplos do dataset (proxy do split contaminado)
-    log(f"Validação (amostra contaminada): {len(validacao)} | Isolado: {len(TESTE_ISOLADO)}")
+    amostra_ds = full["test"]  # 50 held-out do dataset (mesmo split do fine-tune)
+    log(f"Amostra do dataset (held-out): {len(amostra_ds)} | Teste isolado: {len(TESTE_ISOLADO)}")
 
     def fmt(ex):
         return (f"<|im_start|>user\n{ex['instruction']}<|im_end|>\n"
@@ -249,10 +254,10 @@ def main():
     log("CAMADA 1 — Perplexidade")
     log("-" * 72)
 
-    textos_val = [fmt(validacao[i]) for i in range(min(N_VALIDACAO, len(validacao)))]
+    textos_val = [fmt(amostra_ds[i]) for i in range(min(N_VALIDACAO, len(amostra_ds)))]
     lb_v, pb_v = calcular_perplexidade(modelo_base, tokenizer, textos_val)
     ll_v, pl_v = calcular_perplexidade(modelo_lora, tokenizer, textos_val)
-    log(f"\n  1a. Validação (amostra {len(textos_val)}) — contaminado [⚠ baixa fiabilidade]")
+    log(f"\n  1a. Amostra do dataset ({len(textos_val)} held-out) — referência [baixa prioridade]")
     log(f"      Base {pb_v:8.2f} | LoRA {pl_v:8.2f} | Δ {pb_v - pl_v:+.2f}")
 
     textos_iso = [fmt(ex) for ex in TESTE_ISOLADO]
@@ -265,9 +270,9 @@ def main():
     log("\n" + "-" * 72)
     log("CAMADA 2 — Geração")
     log("-" * 72)
-    val_list = [dict(validacao[i]) for i in range(min(N_VALIDACAO, len(validacao)))]
+    val_list = [dict(amostra_ds[i]) for i in range(min(N_VALIDACAO, len(amostra_ds)))]
 
-    log("\n  2a. Verbose — validação")
+    log("\n  2a. Verbose — amostra do dataset")
     pv, rv, rbv, rlv = gerar_par(modelo_base, modelo_lora, tokenizer, val_list, MAX_TOKENS_VERBOSE, "val-verbose")
     log("\n  2b. Verbose — isolado")
     pi, ri, rbi, rli = gerar_par(modelo_base, modelo_lora, tokenizer, TESTE_ISOLADO, MAX_TOKENS_VERBOSE, "iso-verbose")
@@ -308,8 +313,8 @@ def main():
             "lora_repo": LORA_REPO_ID,
             "dataset": DATASET_NAME,
             "perplexidade": {
-                "validacao": {"base": pb_v, "lora": pl_v},
-                "isolado":   {"base": pb_i, "lora": pl_i},
+                "amostra_dataset": {"base": pb_v, "lora": pl_v},
+                "isolado":         {"base": pb_i, "lora": pl_i},
             },
         },
         "isolado_verbose": [
