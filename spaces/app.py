@@ -37,7 +37,7 @@ with gr.Blocks(title="Qwen2.5-1.5B PT-QA") as demo:
     gr.Markdown(
         """
         # Qwen2.5-1.5B — Perguntas & Respostas em Português
-        Modelo fine-tunado com LoRA sobre 500 pares Q&A em Português (PT-PT).
+        Modelo fine-tunado com LoRA (rank 16) sobre 5005 pares Q&A em Português (PT-PT).
         Categorias: história, ciência, cultura, tecnologia, IA/ML e mais.
         """
     )
