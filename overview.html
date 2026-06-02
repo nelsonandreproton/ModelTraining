@@ -696,31 +696,33 @@
         <div class="result-card winner">
           <div class="rank">🥇</div>
           <div class="model-name">Qwen2.5-1.5B + LoRA</div>
-          <div class="perp good">1.86</div>
-          <div class="perp-label">perplexidade</div>
-          <div style="font-size:0.78rem; color:var(--muted); margin-top:8px;">500 exemplos PT, 512 tokens<br/>20 épocas — resultado final</div>
+          <div class="perp good">76%</div>
+          <div class="perp-label">judge LoRA (set isolado)</div>
+          <div style="font-size:0.78rem; color:var(--muted); margin-top:8px;">5005 exemplos PT, 512 tokens<br/>epoch-2 (early-stop, teto 10) — perplexidade isolada 7.26</div>
         </div>
         <div class="result-card">
           <div class="rank">🥈</div>
           <div class="model-name">Qwen2.5-1.5B Base</div>
-          <div class="perp mid">22.72</div>
-          <div class="perp-label">perplexidade</div>
-          <div style="font-size:0.78rem; color:var(--muted); margin-top:8px;">Sem fine-tuning<br/>benchmark de referência</div>
+          <div class="perp mid">22%</div>
+          <div class="perp-label">judge Base (set isolado)</div>
+          <div style="font-size:0.78rem; color:var(--muted); margin-top:8px;">Sem fine-tuning<br/>perplexidade isolada 12.95</div>
         </div>
       </div>
 
       <div style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:14px; font-size:0.85rem;">
-        <div style="margin-bottom:8px; color:var(--text); font-weight:600;">Interpretação dos resultados</div>
+        <div style="margin-bottom:8px; color:var(--text); font-weight:600;">Interpretação dos resultados (dataset 5005)</div>
         <div style="color:var(--muted);">
-          O LoRA atingiu <span style="color:var(--green); font-weight:600;">1.86</span> vs
-          <span style="color:var(--yellow); font-weight:600;">22.72</span> do Qwen2.5-1.5B base —
-          uma melhoria de <strong style="color:var(--text);">12×</strong>. A perplexidade de 1.86
-          é excecional — significa que o modelo prevê cada token com ~86% de certeza,
-          praticamente a memorizar o formato Q&amp;A. Para comparação, o GPT-2 + LoRA anterior
-          atingiu 6.44 no mesmo dataset.<br/><br/>
-          O Qwen2.5-1.5B parte já de uma base muito mais forte (1.54B params vs 124M do GPT-2,
-          treinado em dados multilingues incluindo português), o que explica o salto de qualidade
-          mesmo com os mesmos 500 exemplos.
+          O melhor modelo é o <strong style="color:var(--text);">checkpoint do epoch 2</strong>, escolhido por early-stopping
+          a partir de um teto de 10 épocas. Vence o judge cego em <span style="color:var(--green); font-weight:600;">76%</span>
+          dos casos em ambas as passagens (verbose e concisa), com fluência Δ+1.12, BERTScore superior e
+          contaminação PT-BR reduzida (isolado-conciso <span style="color:var(--yellow); font-weight:600;">32 → 4</span> marcadores).<br/><br/>
+          <strong>A perplexidade isolada (~7.2) NÃO desce com mais épocas</strong> — a eval_loss tem o mínimo no epoch 2 e
+          sobe depois (overfit). O 3.52 do run anterior de 500 exemplos era <em>memorização</em> de um dataset pequeno,
+          não um modelo melhor: inalcançável e indesejável com dados reais. O judge/BERTScore (que medem generalização)
+          preferem este modelo; a perplexidade ~7.2 é generalização honesta.<br/><br/>
+          Lição: deixar o early-stopping escolher a época (teto generoso) bate o ajuste manual do nº de épocas.<br/><br/>
+          <strong>Nota honesta:</strong> o judge mede preferência <em>relativa</em>, não correção absoluta —
+          em perguntas factuais difíceis ambos os modelos ainda alucinam.
         </div>
       </div>
     </div>
@@ -893,7 +895,10 @@
           <tr><td><code>tokenize_dataset.py</code></td><td><span class="pill dataset">dataset</span></td><td>Tokeniza com GPT-2 BPE (max 512 tokens, padding EOS)</td></tr>
           <tr><td><code>finetune_lora.py</code></td><td><span class="pill train">treino</span></td><td>LoRA fine-tuning — rank 8, 20 épocas, lr 2e-4</td></tr>
           <tr><td><code>pretrain.py</code></td><td><span class="pill train">treino</span></td><td>Pré-treino tiny GPT-2 do zero (4 layers, d=128, ~3M params)</td></tr>
-          <tr><td><code>eval_compare.py</code></td><td><span class="pill eval">avaliação</span></td><td>Avaliação multi-métrica: perplexidade, PT-BR, ROUGE-L, BERTScore, LLM-judge — set isolado 25 ex.</td></tr>
+          <tr><td><code>eval_compare.py</code></td><td><span class="pill eval">avaliação</span></td><td>Avaliação multi-métrica (CPU local, ~1h): perplexidade, PT-BR, ROUGE-L, BERTScore, LLM-judge — set isolado 25 ex.</td></tr>
+          <tr><td><code>eval_kaggle.py</code></td><td><span class="pill eval">avaliação</span></td><td>Eval em GPU no Kaggle (~5min, sem judge); grava gerações em eval_generations.json</td></tr>
+          <tr><td><code>judge_local.py</code></td><td><span class="pill eval">avaliação</span></td><td>LLM-as-judge local sobre o JSON do Kaggle via LM Studio — sem reinferência</td></tr>
+          <tr><td><code>finetune_lora_kaggle.py</code></td><td><span class="pill train">treino</span></td><td>LoRA em GPU T4 — rank 16, 5 épocas; CUDA_VISIBLE_DEVICES no topo (1 T4, evita DataParallel OOM)</td></tr>
           <tr><td><code>inference_pipeline.py</code></td><td><span class="pill infer">inferência</span></td><td>Geração de texto via pipeline HuggingFace</td></tr>
           <tr><td><code>api.py</code></td><td><span class="pill infer">inferência</span></td><td>FastAPI, porta 8000, endpoint POST /perguntar</td></tr>
           <tr><td><code>chat.html</code></td><td><span class="pill infer">inferência</span></td><td>Chat web — abre no browser com api.py a correr</td></tr>
@@ -1200,7 +1205,7 @@ model = AutoPeftModelForCausalLM.from_pretrained(
   </section>
 
   <footer style="border-top:1px solid var(--border); padding-top:20px; text-align:center; color:var(--muted); font-size:0.82rem;">
-    ModelTraining &nbsp;·&nbsp; Qwen2.5-1.5B + LoRA + FastAPI &nbsp;·&nbsp; Atualizado em 2026-05-27 &nbsp;·&nbsp; Qwen2.5 LoRA: 1.86 perp &nbsp;·&nbsp; 620+ pares PT-PT
+    ModelTraining &nbsp;·&nbsp; Qwen2.5-1.5B + LoRA + FastAPI &nbsp;·&nbsp; Atualizado em 2026-06-02 &nbsp;·&nbsp; Qwen2.5 LoRA: judge 76% &nbsp;·&nbsp; 5005 pares PT-PT
   </footer>
 
 </div>

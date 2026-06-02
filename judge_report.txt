@@ -1,0 +1,33 @@
+========================================================================
+LLM-as-JUDGE LOCAL — sobre gerações do Kaggle
+Modelo treinado: nelsondiasandre/qwen25-1.5b-pt-qa-lora
+Gerado em: 2026-06-02T09:50:49.712043+00:00
+========================================================================
+
+Perplexidade (do Kaggle):
+  Amostra DS Base 7.45 | LoRA 3.98  [held-out, baixa prioridade]
+  Isolado    Base 12.95 | LoRA 7.26  [✓ fiável]
+
+------------------------------------------------------------------------
+Judge — isolado_verbose
+------------------------------------------------------------------------
+
+  Dimensão         Base   LoRA       Δ
+  correcção        3.04   3.84   +0.80
+  fluência         2.84   3.96   +1.12
+  completude       3.16   3.84   +0.68
+
+  Veredito: Base=5 LoRA=19 Empate=1 Erros=0
+  LoRA vence 76% | Base 20% | Empate 4%
+
+------------------------------------------------------------------------
+Judge — isolado_conciso
+------------------------------------------------------------------------
+
+  Dimensão         Base   LoRA       Δ
+  correcção        2.84   3.56   +0.72
+  fluência         3.00   3.80   +0.80
+  completude       2.72   3.40   +0.68
+
+  Veredito: Base=6 LoRA=19 Empate=0 Erros=0
+  LoRA vence 76% | Base 24% | Empate 0%

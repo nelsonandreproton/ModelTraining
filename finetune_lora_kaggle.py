@@ -114,7 +114,7 @@ model.print_trainable_parameters()
 # ── Training config ───────────────────────────────────────────────────────────
 sft_config = SFTConfig(
     output_dir=OUTPUT_DIR,
-    num_train_epochs=5,              # 5005 examples × 5 ≈ 3000 steps; was 20 (set for ~500 examples — overkill + overfit risk at 10× data). Early stopping still guards.
+    num_train_epochs=10,             # 5005 ex × 10 ≈ 5260 steps (~1h at ~1.4 it/s on T4). 5 epochs was undertrained: isolated perplexity 7.17 vs the old 500-set's 3.52 — judge/BERT still favoured 5005, but perplexity (rewards convergence) lagged. 10 is a CEILING: early stopping (patience=3 on eval_loss) halts when it plateaus, load_best_model_at_end keeps the best checkpoint. Tests whether more convergence recovers low perplexity without losing generalization.
     per_device_train_batch_size=2,   # T4 has 15GB; batch 4 OOMs with 1.5B model
     per_device_eval_batch_size=2,
     gradient_accumulation_steps=4,   # effective batch = 2×4 = 8, same as before

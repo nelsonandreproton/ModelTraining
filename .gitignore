@@ -26,6 +26,7 @@ merged_raw_preview.json
 # Eval run artifacts
 eval_run.log
 eval_generations.json
+judge_run.log
 my_lora_model_500_backup/
 
 # Claude Code local config
